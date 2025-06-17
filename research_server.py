@@ -7,7 +7,8 @@ from mcp.server.fastmcp import FastMCP
 PAPER_DIR = "papers"
 
 # Initialize FastMCP server
-mcp = FastMCP("research", port=8001)
+mcp = FastMCP("research")
+
 
 @mcp.tool()
 def search_papers(topic: str, max_results: int = 5) -> List[str]:
@@ -22,14 +23,12 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
         List of paper IDs found in the search
     """
 
-    # Use arxiv to find the papers 
+    # Use arxiv to find the papers
     client = arxiv.Client()
 
     # Search for the most relevant articles matching the queried topic
     search = arxiv.Search(
-        query = topic,
-        max_results = max_results,
-        sort_by = arxiv.SortCriterion.Relevance
+        query=topic, max_results=max_results, sort_by=arxiv.SortCriterion.Relevance
     )
 
     papers = client.results(search)
@@ -47,16 +46,16 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     except (FileNotFoundError, json.JSONDecodeError):
         papers_info = {}
 
-    # Process each paper and add to papers_info  
+    # Process each paper and add to papers_info
     paper_ids = []
     for paper in papers:
         paper_ids.append(paper.get_short_id())
         paper_info = {
-            'title': paper.title,
-            'authors': [author.name for author in paper.authors],
-            'summary': paper.summary,
-            'pdf_url': paper.pdf_url,
-            'published': str(paper.published.date())
+            "title": paper.title,
+            "authors": [author.name for author in paper.authors],
+            "summary": paper.summary,
+            "pdf_url": paper.pdf_url,
+            "published": str(paper.published.date()),
         }
         papers_info[paper.get_short_id()] = paper_info
 
@@ -67,6 +66,7 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     print(f"Results are saved in: {file_path}")
 
     return paper_ids
+
 
 @mcp.tool()
 def extract_info(paper_id: str) -> str:
@@ -95,7 +95,6 @@ def extract_info(paper_id: str) -> str:
                     continue
 
     return f"There's no saved information related to paper {paper_id}."
-
 
 
 @mcp.resource("papers://folders")
@@ -127,6 +126,7 @@ def get_available_folders() -> str:
 
     return content
 
+
 @mcp.resource("papers://{topic}")
 def get_topic_papers(topic: str) -> str:
     """
@@ -142,7 +142,7 @@ def get_topic_papers(topic: str) -> str:
         return f"# No papers found for topic: {topic}\n\nTry searching for papers on this topic first."
 
     try:
-        with open(papers_file, 'r') as f:
+        with open(papers_file, "r") as f:
             papers_data = json.load(f)
 
         # Create markdown content with paper details
@@ -154,7 +154,9 @@ def get_topic_papers(topic: str) -> str:
             content += f"- **Paper ID**: {paper_id}\n"
             content += f"- **Authors**: {', '.join(paper_info['authors'])}\n"
             content += f"- **Published**: {paper_info['published']}\n"
-            content += f"- **PDF URL**: [{paper_info['pdf_url']}]({paper_info['pdf_url']})\n\n"
+            content += (
+                f"- **PDF URL**: [{paper_info['pdf_url']}]({paper_info['pdf_url']})\n\n"
+            )
             content += f"### Summary\n{paper_info['summary'][:500]}...\n\n"
             content += "---\n\n"
 
@@ -162,32 +164,34 @@ def get_topic_papers(topic: str) -> str:
     except json.JSONDecodeError:
         return f"# Error reading papers data for {topic}\n\nThe papers data file is corrupted."
 
+
 @mcp.prompt()
 def generate_search_prompt(topic: str, num_papers: int = 5) -> str:
     """Generate a prompt for Claude to find and discuss academic papers on a specific topic."""
     return f"""Search for {num_papers} academic papers about '{topic}' using the search_papers tool. 
 
-    Follow these instructions:
-    1. First, search for papers using search_papers(topic='{topic}', max_results={num_papers})
-    2. For each paper found, extract and organize the following information:
-       - Paper title
-       - Authors
-       - Publication date
-       - Brief summary of the key findings
-       - Main contributions or innovations
-       - Methodologies used
-       - Relevance to the topic '{topic}'
+Follow these instructions:
+1. First, search for papers using search_papers(topic='{topic}', max_results={num_papers})
+2. For each paper found, extract and organize the following information:
+   - Paper title
+   - Authors
+   - Publication date
+   - Brief summary of the key findings
+   - Main contributions or innovations
+   - Methodologies used
+   - Relevance to the topic '{topic}'
 
-    3. Provide a comprehensive summary that includes:
-       - Overview of the current state of research in '{topic}'
-       - Common themes and trends across the papers
-       - Key research gaps or areas for future investigation
-       - Most impactful or influential papers in this area
+3. Provide a comprehensive summary that includes:
+   - Overview of the current state of research in '{topic}'
+   - Common themes and trends across the papers
+   - Key research gaps or areas for future investigation
+   - Most impactful or influential papers in this area
 
-    4. Organize your findings in a clear, structured format with headings and bullet points for easy readability.
+4. Organize your findings in a clear, structured format with headings and bullet points for easy readability.
 
-    Please present both detailed information about each paper and a high-level synthesis of the research landscape in {topic}."""
+Please present both detailed information about each paper and a high-level synthesis of the research landscape in {topic}."""
+
 
 if __name__ == "__main__":
     # Initialize and run the server
-    mcp.run(transport='sse')
+    mcp.run(transport="stdio")
