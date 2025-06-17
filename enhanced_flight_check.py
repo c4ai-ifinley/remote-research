@@ -12,6 +12,23 @@ from pathlib import Path
 # Import the DSPy optimizer
 from dspy_optimizer import DSPyFlightOptimizer, OptimizationContext
 
+# Import color utilities
+from color_utils import (
+    flight_check_print,
+    debug_print,
+    system_print,
+    error_print,
+    success_print,
+    warning_print,
+    dspy_print,
+    optimization_print,
+    header_print,
+    separator_print,
+    test_result_print,
+    Colors,
+    colored_print,
+)
+
 
 class TestResult(Enum):
     PASS = "PASS"
@@ -123,12 +140,12 @@ class EnhancedFlightChecker:
         self.optimizer = DSPyPromptOptimizer(config_path)
         self.test_cases: Dict[str, List[PromptTestCase]] = {}
 
-        print("Initializing Enhanced Flight Checker...")
-        print("Testing DSPy connection...")
+        system_print("Initializing Enhanced Flight Checker...")
+        dspy_print("Testing DSPy connection...")
         if self.optimizer.dspy_optimizer.test_dspy_connection():
-            print("DSPy optimizer is ready!")
+            success_print("DSPy optimizer is ready!")
         else:
-            print("DSPy optimizer failed - will use rule-based fallback")
+            warning_print("DSPy optimizer failed - will use rule-based fallback")
 
         self.load_test_cases()
 
@@ -298,7 +315,7 @@ class EnhancedFlightChecker:
             import re
 
             urls = re.findall(r"https?://[^\s]+", test_case.prompt)
-            url = urls[0] if urls else "https://httpbin.org/json"
+            url = urls[0] if urls else "https://example.com"
             return {"url": url}
 
         return {}
@@ -443,8 +460,8 @@ class EnhancedFlightChecker:
             self.verbosity = verbosity
 
         if self.verbosity.value >= VerbosityLevel.NORMAL.value:
-            print("\nStarting Enhanced Tool Flight Check...")
-            print("=" * 50)
+            header_print("Starting Enhanced Tool Flight Check")
+            separator_print()
 
         start_time = time.time()
         all_reports = []
@@ -466,15 +483,18 @@ class EnhancedFlightChecker:
         for tool_name in test_order:
             if tool_name in available_tools and tool_name in self.test_cases:
                 if self.verbosity.value >= VerbosityLevel.MINIMAL.value:
-                    print(f"\nTesting {tool_name}...")
+                    flight_check_print(f"\nTesting {tool_name}...")
 
                 for test_case in self.test_cases[tool_name]:
                     if self.verbosity.value >= VerbosityLevel.NORMAL.value:
-                        print(
-                            f"  Running {test_case.test_name}: {test_case.description}"
+                        colored_print(
+                            f"  Running {test_case.test_name}: {test_case.description}",
+                            Colors.FLIGHT_CHECK,
                         )
                     elif self.verbosity.value >= VerbosityLevel.MINIMAL.value:
-                        print(f"  {test_case.test_name}...", end=" ")
+                        colored_print(
+                            f"  {test_case.test_name}...", Colors.FLIGHT_CHECK, end=" "
+                        )
 
                     report = await self.run_single_test(test_case)
                     all_reports.append(report)
@@ -501,11 +521,15 @@ class EnhancedFlightChecker:
     async def _optimize_failed_tests(self, failed_tests: List[tuple]):
         """Optimize prompts for failed tests using DSPy"""
         if self.verbosity.value >= VerbosityLevel.NORMAL.value:
-            print(f"\nAttempting optimization for {len(failed_tests)} failed tests...")
+            optimization_print(
+                f"Attempting optimization for {len(failed_tests)} failed tests..."
+            )
 
         for test_case, report in failed_tests:
             if self.verbosity.value >= VerbosityLevel.VERBOSE.value:
-                print(f"  Optimizing {test_case.tool_name}.{test_case.test_name}...")
+                optimization_print(
+                    f"  Optimizing {test_case.tool_name}.{test_case.test_name}..."
+                )
 
             # Get the original prompt from the JSON config (not the potentially modified one)
             original_prompt = self._get_original_prompt_from_config(test_case)
@@ -531,8 +555,10 @@ class EnhancedFlightChecker:
 
             if optimized_prompt != original_prompt:
                 if self.verbosity.value >= VerbosityLevel.VERBOSE.value:
-                    print(f"    Original: '{original_prompt}'")
-                    print(f"    Optimized: '{optimized_prompt}'")
+                    colored_print(f"    Original: '{original_prompt}'", Colors.WARNING)
+                    colored_print(
+                        f"    Optimized: '{optimized_prompt}'", Colors.SUCCESS
+                    )
 
                 # Update the test case with optimized prompt
                 test_case.prompt = optimized_prompt
@@ -555,7 +581,7 @@ class EnhancedFlightChecker:
                 # Save updated configuration
                 self._update_config_with_optimized_prompt(test_case)
             else:
-                print(
+                warning_print(
                     f"    No optimization applied for {test_case.tool_name}.{test_case.test_name}"
                 )
 
@@ -601,24 +627,43 @@ class EnhancedFlightChecker:
             TestResult.TIMEOUT: "TIMEOUT",
         }
 
+        color_map = {
+            TestResult.PASS: Colors.TEST_PASS,
+            TestResult.FAIL: Colors.TEST_FAIL,
+            TestResult.SKIP: Colors.TEST_SKIP,
+            TestResult.TIMEOUT: Colors.TEST_TIMEOUT,
+        }
+
         if self.verbosity == VerbosityLevel.MINIMAL:
-            print(f"{status_text[report.result]} ({report.execution_time:.2f}s)")
+            colored_print(
+                f"{status_text[report.result]} ({report.execution_time:.2f}s)",
+                color_map[report.result],
+            )
             if report.result == TestResult.FAIL:
-                print(f"    Error: {report.error_message}")
+                error_print(f"    {report.error_message}")
 
         elif self.verbosity.value >= VerbosityLevel.NORMAL.value:
-            print(f"    {status_text[report.result]} ({report.execution_time:.2f}s)")
+            colored_print(
+                f"    {status_text[report.result]} ({report.execution_time:.2f}s)",
+                color_map[report.result],
+            )
             if report.error_message:
-                print(f"    Error: {report.error_message}")
+                error_print(f"    {report.error_message}")
 
             if self.verbosity.value >= VerbosityLevel.VERBOSE.value:
                 if report.result == TestResult.FAIL and report.response:
-                    print(f"    Response preview: {report.response[:200]}...")
+                    colored_print(
+                        f"    Response preview: {report.response[:200]}...",
+                        Colors.TOOL_RESPONSE,
+                    )
                 elif report.result == TestResult.PASS and report.response:
-                    print(f"    Response looks good: {report.response[:100]}...")
+                    colored_print(
+                        f"    Response looks good: {report.response[:100]}...",
+                        Colors.TOOL_RESPONSE,
+                    )
 
                 if self.verbosity == VerbosityLevel.DEBUG and report.validation_details:
-                    print(f"    Validation details: {report.validation_details}")
+                    debug_print(f"    Validation details: {report.validation_details}")
 
     def _generate_flight_report(
         self, test_reports: List[TestReport], total_time: float
@@ -652,35 +697,38 @@ class EnhancedFlightChecker:
 
     def _print_flight_summary(self, report: FlightCheckReport):
         """Print formatted flight check summary"""
-        print("\n" + "=" * 50)
-        print("ENHANCED FLIGHT CHECK SUMMARY")
-        print("=" * 50)
+        separator_print()
+        header_print("ENHANCED FLIGHT CHECK SUMMARY")
+        separator_print()
 
-        print(f"Total Tests: {report.total_tests}")
-        print(f"Passed: {report.passed}")
-        print(f"Failed: {report.failed}")
-        print(f"Skipped: {report.skipped}")
-        print(f"Timeout: {report.timeout}")
-        print(f"Critical Failures: {report.critical_failures}")
-        print(f"Total Time: {report.execution_time:.2f}s")
+        flight_check_print(f"Total Tests: {report.total_tests}")
+        success_print(f"Passed: {report.passed}")
+        error_print(f"Failed: {report.failed}")
+        warning_print(f"Skipped: {report.skipped}")
+        colored_print(f"Timeout: {report.timeout}", Colors.TEST_TIMEOUT)
+        error_print(f"Critical Failures: {report.critical_failures}")
+        system_print(f"Total Time: {report.execution_time:.2f}s")
 
         if report.system_ready:
-            print("\nSYSTEM READY FOR TAKEOFF! All critical systems operational.")
+            success_print(
+                "\nSYSTEM READY FOR TAKEOFF! All critical systems operational."
+            )
         else:
-            print(
+            error_print(
                 f"\nSYSTEM NOT READY - {report.critical_failures} critical failure(s) detected!"
             )
-            print("Critical failures:")
+            error_print("Critical failures:")
             for test_report in report.test_reports:
                 if (
                     test_report.result in [TestResult.FAIL, TestResult.TIMEOUT]
                     and test_report.test_case.critical
                 ):
-                    print(
-                        f"   - {test_report.test_case.tool_name}.{test_report.test_case.test_name}: {test_report.error_message}"
+                    colored_print(
+                        f"   - {test_report.test_case.tool_name}.{test_report.test_case.test_name}: {test_report.error_message}",
+                        Colors.ERROR,
                     )
 
-        print("=" * 50)
+        separator_print()
 
     def export_report(self, report: FlightCheckReport, filename: str = None):
         """Export flight check report to JSON"""

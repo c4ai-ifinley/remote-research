@@ -195,3 +195,4 @@ Please present both detailed information about each paper and a high-level synth
 if __name__ == "__main__":
     # Initialize and run the server
     mcp.run(transport="stdio")
+    print(os.environ.get("DLAI_LOCAL_URL").format(port=6277)[:-1])

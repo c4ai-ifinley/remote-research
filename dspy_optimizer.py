@@ -10,6 +10,32 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 
+# Import color utilities with fallback
+try:
+    from color_utils import (
+        debug_print,
+        dspy_print,
+        error_print,
+        success_print,
+        warning_print,
+    )
+except ImportError:
+    # Fallback to regular print if colors not available
+    def debug_print(text):
+        print(f"[DEBUG] {text}")
+
+    def dspy_print(text):
+        print(f"[DSPy] {text}")
+
+    def error_print(text):
+        print(f"[ERROR] {text}")
+
+    def success_print(text):
+        print(f"[SUCCESS] {text}")
+
+    def warning_print(text):
+        print(f"[WARNING] {text}")
+
 
 @dataclass
 class OptimizationContext:
@@ -21,7 +47,7 @@ class OptimizationContext:
     expected_output_format: str
     success_criteria: Dict[str, Any]
     previous_attempts: List[str]
-    tool_arguments: Dict[str, Any] = None  # Add tool arguments
+    tool_arguments: Dict[str, Any] = None
 
 
 class ToolPromptSignature(dspy.Signature):
@@ -95,19 +121,19 @@ class DSPyFlightOptimizer:
 
     def setup_dspy(self):
         """Initialize DSPy with OpenAI o3-mini-birthright model"""
-        print("Setting up DSPy optimizer...")
+        dspy_print("Setting up DSPy optimizer...")
 
         try:
             # Get configuration from environment variables
             openai_api_key = os.getenv("OPENAI_API_KEY")
             base_url = os.getenv("BASE_URL")
 
-            print(f"OpenAI API Key found: {'Yes' if openai_api_key else 'No'}")
-            print(f"Base URL: {base_url}")
+            debug_print(f"OpenAI API Key found: {'Yes' if openai_api_key else 'No'}")
+            debug_print(f"Base URL: {base_url}")
 
             if not openai_api_key:
-                print("Warning: OPENAI_API_KEY not found in environment variables")
-                print(
+                warning_print("OPENAI_API_KEY not found in environment variables")
+                warning_print(
                     "DSPy will not be available - falling back to rule-based optimization"
                 )
                 return
@@ -116,55 +142,52 @@ class DSPyFlightOptimizer:
             try:
                 import dspy
 
-                print("DSPy imported successfully")
+                debug_print("DSPy imported successfully")
             except ImportError as e:
-                print(f"Failed to import DSPy: {e}")
+                error_print(f"Failed to import DSPy: {e}")
                 return
 
             # Configure DSPy with o3-mini-birthright model
-            # Use openai/ prefix for custom OpenAI-compatible endpoints
-            # o3-mini requires specific parameters for reasoning models
             lm_config = {
-                "model": "openai/o3-mini-birthright",  # Add provider prefix
+                "model": "openai/o3-mini-birthright",
                 "api_key": openai_api_key,
-                "max_tokens": 20000,  # Required minimum for reasoning models
-                "temperature": 1.0,  # Required for reasoning models
+                "max_tokens": 20000,
+                "temperature": 1.0,
             }
 
-            # Add base_url if provided
             if base_url:
-                lm_config["base_url"] = base_url  # Changed from api_base to base_url
-                print(f"Using custom base URL: {base_url}")
+                lm_config["base_url"] = base_url
+                debug_print(f"Using custom base URL: {base_url}")
 
-            print(f"Initializing DSPy with config: {lm_config}")
+            debug_print(f"Initializing DSPy with config: {lm_config}")
 
             # Initialize the language model
             lm = dspy.LM(**lm_config)
             dspy.configure(lm=lm)
 
-            print("DSPy LM configured successfully")
+            debug_print("DSPy LM configured successfully")
 
             # Initialize DSPy modules
             self.optimizer = PromptOptimizer()
             self.call_generator = ToolCallGenerator()
 
-            print("DSPy modules initialized successfully")
-            print("DSPy setup complete!")
+            debug_print("DSPy modules initialized successfully")
+            success_print("DSPy setup complete!")
 
         except Exception as e:
-            print(f"Error during DSPy setup: {e}")
-            print(f"Error type: {type(e).__name__}")
+            error_print(f"Error during DSPy setup: {e}")
+            debug_print(f"Error type: {type(e).__name__}")
             import traceback
 
-            print(f"Full traceback:\n{traceback.format_exc()}")
-            print("Falling back to rule-based optimization")
+            debug_print(f"Full traceback:\n{traceback.format_exc()}")
+            warning_print("Falling back to rule-based optimization")
             self.optimizer = None
             self.call_generator = None
 
     def optimize_prompt(self, context: OptimizationContext) -> str:
         """Optimize a prompt using DSPy"""
         if not self.optimizer:
-            print("DSPy optimizer not available, using fallback")
+            debug_print("DSPy optimizer not available, using fallback")
             return self._fallback_optimization(context)
 
         try:
@@ -181,10 +204,10 @@ class DSPyFlightOptimizer:
             # Prepare failure info
             failure_info = self._prepare_failure_info(context)
 
-            print(f"Calling DSPy optimizer with:")
-            print(f"  Tool: {context.tool_name}")
-            print(f"  Arguments: {tool_arguments}")
-            print(f"  Original prompt: '{context.original_prompt}'")
+            dspy_print(f"Calling DSPy optimizer with:")
+            debug_print(f"  Tool: {context.tool_name}")
+            debug_print(f"  Arguments: {tool_arguments}")
+            debug_print(f"  Original prompt: '{context.original_prompt}'")
 
             # Use DSPy to optimize the prompt
             result = self.optimizer(
@@ -196,17 +219,17 @@ class DSPyFlightOptimizer:
             )
 
             optimized_prompt = result.optimized_prompt.strip()
-            print(f"  DSPy result: '{optimized_prompt}'")
+            success_print(f"  DSPy result: '{optimized_prompt}'")
 
             # Validate the optimized prompt
             if self._validate_optimized_prompt(optimized_prompt, context):
                 return optimized_prompt
             else:
-                print("DSPy result failed validation, using fallback")
+                warning_print("DSPy result failed validation, using fallback")
                 return self._fallback_optimization(context)
 
         except Exception as e:
-            print(f"DSPy optimization failed with error: {e}")
+            error_print(f"DSPy optimization failed with error: {e}")
             return self._fallback_optimization(context)
 
     def generate_tool_call(
@@ -222,7 +245,7 @@ class DSPyFlightOptimizer:
             )
             return result.tool_call
         except Exception as e:
-            print(f"DSPy call generation failed: {e}")
+            error_print(f"DSPy call generation failed: {e}")
             return self._fallback_call_generation(tool_name, user_intent)
 
     def _get_tool_description(self, tool_name: str) -> str:
@@ -270,19 +293,6 @@ Usage Notes: Can fetch web pages, API responses, JSON data. Handles various cont
             tool_name, f"Tool: {tool_name} - No detailed description available."
         )
 
-    def _prepare_tool_context(self, context: OptimizationContext) -> str:
-        """Prepare tool context for DSPy"""
-        context_str = f"""
-Expected Output Format: {context.expected_output_format}
-Success Criteria: {json.dumps(context.success_criteria, indent=2)}
-Previous Optimization Attempts: {len(context.previous_attempts)}
-
-The prompt should be clear, specific, and guide the tool to produce output that meets the success criteria.
-For example, if the tool should return paper IDs, the prompt should explicitly request paper IDs.
-If specific formatting is required, the prompt should specify the exact format needed.
-"""
-        return context_str.strip()
-
     def _prepare_failure_info(self, context: OptimizationContext) -> str:
         """Prepare failure information for DSPy"""
         failure_info = f"""
@@ -321,20 +331,16 @@ EXAMPLE OF GOOD PROMPTS:
         self, optimized_prompt: str, context: OptimizationContext
     ) -> bool:
         """Validate that the optimized prompt is reasonable"""
-        # Basic validation checks
         if not optimized_prompt or len(optimized_prompt.strip()) < 10:
             return False
 
-        # Check if it's substantially different from the original
         if optimized_prompt.strip() == context.original_prompt.strip():
             return False
 
-        # Check if it's not just a repeat of previous attempts
         for prev_attempt in context.previous_attempts:
             if optimized_prompt.strip() == prev_attempt.strip():
                 return False
 
-        # Tool-specific validation
         if context.tool_name == "search_papers":
             required_elements = ["search", "papers"]
             if not any(elem in optimized_prompt.lower() for elem in required_elements):
@@ -354,13 +360,12 @@ EXAMPLE OF GOOD PROMPTS:
             and len(original.split()) <= 4
         ):
 
-            # Generate completely new, specific prompts based on tool
             specific_prompts = {
                 "search_papers": "Search for academic papers about machine learning. Return exactly 2 paper IDs from arXiv.",
                 "extract_info": "Extract detailed information about paper with ID 'test_paper_123'. Show the title, authors, summary, and publication details.",
                 "read_file": "Read the server_config.json file and display its complete contents.",
                 "list_directory": "List all files and directories in the current folder. Show the complete directory structure.",
-                "fetch": "Fetch content from https://httpbin.org/json and display the returned JSON data.",
+                "fetch": "Fetch content from https://example.com and display the returned content.",
             }
 
             if tool_name in specific_prompts:
@@ -386,7 +391,6 @@ EXAMPLE OF GOOD PROMPTS:
         if expected_format in format_additions:
             return original + format_additions[expected_format]
 
-        # Default enhancement
         return (
             original
             + f" Please provide a clear, specific response that meets the requirements for the {tool_name} tool."
@@ -406,17 +410,15 @@ EXAMPLE OF GOOD PROMPTS:
             tool_name, f"Use the {tool_name} tool to help with: {user_intent}"
         )
 
-    # Example usage and testing functions
     def test_dspy_connection(self):
         """Test if DSPy is properly configured and can make a call"""
         if not self.optimizer:
-            print("DSPy optimizer not initialized")
+            warning_print("DSPy optimizer not initialized")
             return False
 
         try:
-            print("Testing DSPy connection...")
+            dspy_print("Testing DSPy connection...")
 
-            # Simple test call
             result = self.optimizer(
                 tool_name="test_tool",
                 tool_description="A test tool for verification that returns simple responses",
@@ -425,14 +427,37 @@ EXAMPLE OF GOOD PROMPTS:
                 original_prompt="test prompt that needs improvement",
             )
 
-            print(
+            success_print(
                 f"DSPy test successful! Optimized prompt: '{result.optimized_prompt}'"
             )
             return True
 
         except Exception as e:
-            print(f"DSPy test failed: {e}")
+            error_print(f"DSPy test failed: {e}")
             import traceback
 
-            print(f"Full traceback:\n{traceback.format_exc()}")
+            debug_print(f"Full traceback:\n{traceback.format_exc()}")
             return False
+
+
+def test_dspy_optimizer():
+    """Test the DSPy optimizer functionality"""
+    optimizer = DSPyFlightOptimizer()
+
+    context = OptimizationContext(
+        tool_name="search_papers",
+        original_prompt="Find papers about machine learning",
+        failure_reason="Response validation failed - no paper IDs found",
+        expected_output_format="list_of_ids",
+        success_criteria={"contains_arxiv_ids": True, "min_response_length": 5},
+        previous_attempts=[],
+        tool_arguments={"topic": "machine learning", "max_results": 2},
+    )
+
+    optimized = optimizer.optimize_prompt(context)
+    print(f"Original: {context.original_prompt}")
+    print(f"Optimized: {optimized}")
+
+
+if __name__ == "__main__":
+    test_dspy_optimizer()

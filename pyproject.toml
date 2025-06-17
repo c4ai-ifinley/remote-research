@@ -7,6 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
     "anthropic>=0.51.0",
     "arxiv>=2.2.0",
+    "colorama>=0.4.6",
     "dspy>=2.6.27",
     "fastmcp>=2.8.1",
     "mcp>=1.8.0",

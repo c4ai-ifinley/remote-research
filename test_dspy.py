@@ -6,60 +6,71 @@ Standalone test script for DSPy configuration
 import os
 from dotenv import load_dotenv
 
+# Import color utilities
+from color_utils import (
+    debug_print,
+    system_print,
+    error_print,
+    success_print,
+    warning_print,
+    dspy_print,
+    header_print,
+    separator_print,
+    test_colors,
+)
+
 # Load environment variables
 load_dotenv()
 
 
 def test_dspy_setup():
     """Test DSPy setup independently"""
-    print("=" * 50)
-    print("DSPy Standalone Test")
-    print("=" * 50)
+    separator_print()
+    header_print("DSPy Standalone Test")
+    separator_print()
 
     # Check environment variables
     openai_key = os.getenv("OPENAI_API_KEY")
     base_url = os.getenv("BASE_URL")
 
-    print(f"OPENAI_API_KEY: {'✓ Found' if openai_key else '✗ Missing'}")
-    print(f"BASE_URL: {base_url if base_url else '✗ Missing'}")
+    system_print(f"OPENAI_API_KEY: {'✓ Found' if openai_key else '✗ Missing'}")
+    system_print(f"BASE_URL: {base_url if base_url else '✗ Missing'}")
 
     if not openai_key:
-        print("\nError: OPENAI_API_KEY not found in environment")
-        print("Please add it to your .env file")
+        error_print("OPENAI_API_KEY not found in environment")
+        warning_print("Please add it to your .env file")
         return False
 
     # Test DSPy import
     try:
         import dspy
 
-        print("✓ DSPy import successful")
+        success_print("DSPy import successful")
     except ImportError as e:
-        print(f"✗ DSPy import failed: {e}")
-        print("Try: uv add dspy-ai")
+        error_print(f"DSPy import failed: {e}")
+        warning_print("Try: uv add dspy-ai")
         return False
 
     # Test DSPy configuration
     try:
-        print("\nTesting DSPy configuration...")
+        dspy_print("Testing DSPy configuration...")
 
-        # For custom OpenAI-compatible endpoints, use "openai/" prefix
-        # o3-mini requires specific parameters
         config = {
-            "model": "openai/o3-mini-birthright",  # Add openai/ prefix
+            "model": "openai/o3-mini-birthright",
             "api_key": openai_key,
-            "max_tokens": 20000,  # Required minimum for reasoning models
-            "temperature": 1.0,  # Required for reasoning models
+            "max_tokens": 20000,
+            "temperature": 1.0,
         }
 
         if base_url:
             config["base_url"] = base_url
 
-        print(f"Config: {config}")
+        debug_print(f"Config: {config}")
 
         lm = dspy.LM(**config)
         dspy.configure(lm=lm)
 
-        print("✓ DSPy LM configured successfully")
+        success_print("DSPy LM configured successfully")
 
         # Test a simple call
         class SimpleSignature(dspy.Signature):
@@ -68,23 +79,27 @@ def test_dspy_setup():
 
         simple_qa = dspy.ChainOfThought(SimpleSignature)
 
-        print("\nTesting simple DSPy call...")
+        dspy_print("Testing simple DSPy call...")
         result = simple_qa(question="What is 2+2?")
-        print(f"✓ DSPy call successful! Answer: {result.answer}")
+        success_print(f"DSPy call successful! Answer: {result.answer}")
 
         return True
 
     except Exception as e:
-        print(f"✗ DSPy configuration failed: {e}")
+        error_print(f"DSPy configuration failed: {e}")
         import traceback
 
-        print(f"Full error:\n{traceback.format_exc()}")
+        debug_print(f"Full error:\n{traceback.format_exc()}")
         return False
 
 
 if __name__ == "__main__":
+    # First show color test
+    test_colors()
+
+    # Then test DSPy
     success = test_dspy_setup()
     if success:
-        print("\n🎉 DSPy is working correctly!")
+        success_print("🎉 DSPy is working correctly!")
     else:
-        print("\n❌ DSPy setup failed - check the errors above")
+        error_print("❌ DSPy setup failed - check the errors above")

@@ -8,11 +8,21 @@ import asyncio
 import nest_asyncio
 import os
 import traceback
-import warnings
 
-warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 # Import the enhanced flight check system
 from enhanced_flight_check import EnhancedFlightChecker, VerbosityLevel
+
+# Import color utilities
+from color_utils import (
+    system_print,
+    error_print,
+    success_print,
+    warning_print,
+    chat_input_print,
+    colored_print,
+    Colors,
+    header_print,
+)
 
 nest_asyncio.apply()
 
@@ -23,13 +33,17 @@ class MCP_ChatBot:
     def __init__(self):
         self.exit_stack = AsyncExitStack()
 
+        # Get configuration from environment variables
+        base_url = os.getenv("BASE_URL", "https://ai-incubator-api.pnnl.gov")
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
+
         # Initialize Anthropic client with custom base URL and API key
-        self.anthropic = Anthropic(
-            base_url="https://ai-incubator-api.pnnl.gov",
-            api_key=os.getenv(
-                "ANTHROPIC_API_KEY"
-            ),  # or replace with your specific API key
-        )
+        self.anthropic = Anthropic(base_url=base_url, api_key=api_key)
+
+        system_print(f"Initialized Anthropic client with base URL: {base_url}")
 
         # Tools list required for Anthropic API
         self.available_tools = []
@@ -330,7 +344,7 @@ class MCP_ChatBot:
 
         # Run flight check if we have tools and flight checker
         if self.flight_checker and self.available_tools:
-            print("\nRunning system flight check...")
+            system_print("Running system flight check...")
 
             # Use verbose verbosity to see optimization in action
             flight_report = await self.flight_checker.run_flight_check(
@@ -338,10 +352,10 @@ class MCP_ChatBot:
             )
 
             if not flight_report.system_ready:
-                print("\nWARNING: System not ready for full operation!")
+                warning_print("System not ready for full operation!")
                 user_input = input("Continue anyway? (y/N): ").strip().lower()
                 if user_input != "y":
-                    print("Aborting startup due to critical failures.")
+                    error_print("Aborting startup due to critical failures.")
                     return
 
             # Export report for debugging
@@ -386,7 +400,7 @@ class MCP_ChatBot:
                             parallel=False, verbosity=verbosity
                         )
                     else:
-                        print("Flight checker not available (no tools connected)")
+                        error_print("Flight checker not available (no tools connected)")
                     continue
 
                 # Check for @resource syntax first
@@ -423,13 +437,13 @@ class MCP_ChatBot:
 
                         await self.execute_prompt(prompt_name, args)
                     else:
-                        print(f"Unknown command: {command}")
+                        error_print(f"Unknown command: {command}")
                     continue
 
                 await self.process_query(query)
 
             except Exception as e:
-                print(f"\nError: {str(e)}")
+                error_print(f"Error: {str(e)}")
 
     async def cleanup(self):
         await self.exit_stack.aclose()
