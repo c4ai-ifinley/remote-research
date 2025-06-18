@@ -377,6 +377,42 @@ class MCP_ChatBot:
                 if query.lower() == "quit":
                     break
 
+                # Handle test generation command
+                if query.lower().startswith("/generate-tests"):
+                    if self.flight_checker:
+                        parts = query.split()
+                        use_llm = len(parts) == 1 or (
+                            len(parts) > 1 and parts[1].lower() != "rule-based"
+                        )
+
+                        available_tools = [
+                            tool["name"] for tool in self.available_tools
+                        ]
+
+                        if use_llm:
+                            dspy_print("Using LLM-powered test generation...")
+                            from llm_test_generator import llm_generate_test_cases
+
+                            success = llm_generate_test_cases(available_tools, self)
+                        else:
+                            system_print("Using rule-based test generation...")
+                            from test_case_generator import auto_generate_test_cases
+
+                            success = auto_generate_test_cases(available_tools)
+
+                        if success:
+                            success_print(
+                                "Generated missing test cases. Reloading flight checker..."
+                            )
+                            # Reload the flight checker with new test cases
+                            self.flight_checker.load_test_cases()
+                            success_print("Flight checker reloaded with new test cases")
+                        else:
+                            system_print("All tools already have test cases")
+                    else:
+                        error_print("Flight checker not available")
+                    continue
+
                 # Handle flight check command
                 if query.lower().startswith("/flight-check"):
                     if self.flight_checker:

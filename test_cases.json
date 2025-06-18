@@ -1,215 +1,1353 @@
 {
   "test_cases": {
-    "search_papers": [
-      {
-        "test_name": "basic_search",
-        "description": "Test basic paper search functionality",
-        "prompt": "Find stuff about computers",
-        "expected_indicators": [
-          "paper",
-          "machine learning",
-          "results"
-        ],
-        "expected_format": "list_of_ids",
-        "timeout_seconds": 45.0,
-        "critical": true,
-        "success_criteria": {
-          "min_response_length": 5,
-          "contains_arxiv_ids": true,
-          "no_error_keywords": [
-            "error",
-            "failed",
-            "exception"
-          ]
-        },
-        "optimization_history": []
-      },
-      {
-        "test_name": "specific_topic_search",
-        "description": "Test search with specific topic",
-        "prompt": "Find research papers on quantum computing. Limit results to 3 papers.",
-        "expected_indicators": [
-          "quantum",
-          "computing",
-          "papers"
-        ],
-        "expected_format": "list_of_ids",
-        "timeout_seconds": 45.0,
-        "critical": false,
-        "success_criteria": {
-          "min_response_length": 5,
-          "contains_arxiv_ids": true
-        }
-      }
-    ],
-    "extract_info": [
-      {
-        "test_name": "info_extraction",
-        "description": "Test paper information extraction",
-        "prompt": "Extract detailed information about the academic paper with arXiv paper ID \"2109.09586v1\". Return the paper's title, authors, summary, publication date, and PDF URL in JSON format.",
-        "expected_indicators": [
-          "title",
-          "authors",
-          "summary",
-          "detailed information"
-        ],
-        "expected_format": "json_or_text",
-        "timeout_seconds": 15.0,
-        "critical": true,
-        "success_criteria": {
-          "min_response_length": 10,
-          "acceptable_not_found": true,
-          "contains_keywords": [
-            "information"
-          ]
-        },
-        "optimization_history": [
-          {
-            "timestamp": "2025-06-17T15:19:40.107248",
-            "original_prompt": "Show me something",
-            "optimized_prompt": "Extract detailed information about the academic paper with arXiv paper ID \"2109.09586v1\". Return the paper's title, authors, summary, publication date, and PDF URL in JSON format.",
-            "failure_context": "Required keywords not found: ['information'] | Response: {\n  \"title\": \"Some Critical and Ethical Perspectives on the Empirical Turn of AI Interpretability\",\n",
-            "tool_arguments": {
-              "paper_id": "2109.09586v1"
-            },
-            "strategy": "dspy_based"
-          }
-        ]
-      }
-    ],
     "read_file": [
       {
-        "test_name": "config_file_reading",
-        "description": "Test reading configuration files",
-        "prompt": "Read the server_config.json file and show me its contents.",
+        "test_name": "read_existing_file",
+        "description": "Test reading an existing readable file such as server_config.json.",
+        "prompt": "Access the file at the path 'server_config.json', which holds the server configuration details. Return the entire file content exactly as raw plain text without any modification or additional formatting.",
         "expected_indicators": [
-          "mcpServers",
-          "config",
-          "json"
+          "server_config",
+          "json",
+          "content"
         ],
         "expected_format": "json_content",
         "timeout_seconds": 10.0,
         "critical": true,
         "success_criteria": {
-          "contains_json": true,
+          "min_response_length": 20,
           "contains_keywords": [
-            "mcpServers"
+            "server_config",
+            "configuration"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "permission denied",
+            "not found"
           ]
-        }
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-06-17T23:15:44.638750",
+            "original_prompt": "Read the server_config.json file and display its contents.",
+            "optimized_prompt": "Read the file \"server_config.json\". Return the complete file contents as plain text.",
+            "failure_context": "Required keywords not found: ['server_config', 'configuration'] | Response: {\n    \"mcpServers\": {\n        \n        \"filesystem\": {\n            \"command\": \"npx\",\n            \"ar",
+            "tool_arguments": {
+              "path": "server_config.json"
+            },
+            "strategy": "dspy_based"
+          },
+          {
+            "timestamp": "2025-06-17T23:20:46.280306",
+            "original_prompt": "Read the file \"server_config.json\". Return the complete file contents as plain text.",
+            "optimized_prompt": "Using the tool argument, open the file at \"server_config.json\" and output its entire content as a plain text block without any modifications or extra formatting.",
+            "failure_context": "Required keywords not found: ['server_config', 'configuration'] | Response: {\n    \"mcpServers\": {\n        \n        \"filesystem\": {\n            \"command\": \"npx\",\n            \"ar",
+            "tool_arguments": {
+              "path": "server_config.json"
+            },
+            "strategy": "dspy_based"
+          },
+          {
+            "timestamp": "2025-06-17T23:23:12.141854",
+            "original_prompt": "Using the tool argument, open the file at \"server_config.json\" and output its entire content as a plain text block without any modifications or extra formatting.",
+            "optimized_prompt": "Access the file at the path 'server_config.json', which holds the server configuration details. Return the entire file content exactly as raw plain text without any modification or additional formatting.",
+            "failure_context": "Required keywords not found: ['server_config', 'configuration'] | Response: {\n    \"mcpServers\": {\n        \n        \"filesystem\": {\n            \"command\": \"npx\",\n            \"ar",
+            "tool_arguments": {
+              "path": "server_config.json"
+            },
+            "strategy": "dspy_based"
+          }
+        ],
+        "generated_at": "2025-06-17T23:09:16.000577",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "read_nonexistent_file",
+        "description": "Test reading a file that does not exist to ensure graceful error handling.",
+        "prompt": "Attempt to read the non_existent_file.txt file.",
+        "expected_indicators": [
+          "not found",
+          "error"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.000577",
+        "generated_by": "llm_dspy"
       }
     ],
-    "list_directory": [
+    "read_multiple_files": [
       {
-        "test_name": "current_directory_listing",
-        "description": "Test listing current directory contents",
-        "prompt": "List all files and directories in the current folder. Show me what's available.",
+        "test_name": "basic_multiple_file_read",
+        "description": "Test reading two valid files and verifying that their contents are correctly returned.",
+        "prompt": "Read the files at ['/path/to/file1.txt', '/path/to/file2.txt'] and display their contents.",
         "expected_indicators": [
-          "file",
+          "file1",
+          "file2",
+          "content"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "permission denied",
+            "failed"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.002589",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "file_read_with_missing_file",
+        "description": "Test reading a mix of a valid file and a non-existent file to verify error handling without stopping the process.",
+        "prompt": "Attempt to read ['/path/to/valid_file.txt', '/non/existent/file.txt'] and return the results.",
+        "expected_indicators": [
+          "valid_file",
+          "content",
+          "not found"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 20.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "permission denied",
+            "failed"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.002589",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "read_large_number_of_files",
+        "description": "Test reading a larger batch of files to assess performance and response integrity.",
+        "prompt": "Read the files at ['/path/to/file1.txt', '/path/to/file2.txt', '/path/to/file3.txt', '/path/to/file4.txt', '/path/to/file5.txt'] and return their contents.",
+        "expected_indicators": [
+          "file1",
+          "file2",
+          "file3",
+          "file4",
+          "file5",
+          "content"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 50,
+          "contains_keywords": [],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "timeout",
+            "failed"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.002589",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "write_file": [
+      {
+        "test_name": "basic_file_write",
+        "description": "Test writing new content to a new file.",
+        "prompt": "Write file 'new_file.txt' with content 'Hello world!'",
+        "expected_indicators": [
+          "success",
+          "written",
+          "content"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 10.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "written"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.003588",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "overwrite_existing_file",
+        "description": "Test overwriting an existing file with new content.",
+        "prompt": "Overwrite file 'existing_file.txt' with content 'Updated content here'",
+        "expected_indicators": [
+          "overwritten",
+          "update",
+          "content"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 10.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "overwritten"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.003588",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "invalid_directory_write",
+        "description": "Test writing to a restricted directory to simulate permission error.",
+        "prompt": "Attempt to write file '/restricted_area/secret.txt' with content 'Sensitive info'",
+        "expected_indicators": [
+          "permission denied",
+          "error",
+          "restricted"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "permission denied"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": []
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.003588",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "edit_file": [
+      {
+        "test_name": "basic_dryrun_edit",
+        "description": "Perform a dry-run edit on the configuration file, expecting a git-style diff output.",
+        "prompt": "Edit the server_config.json file by replacing 'oldValue' with 'newValue' using a dry run to preview the changes.",
+        "expected_indicators": [
+          "diff",
+          "git",
+          "preview"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 10.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "diff",
+            "git",
+            "preview"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.005589",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "actual_edit",
+        "description": "Test performing an actual edit on a file to replace a specific line.",
+        "prompt": "Edit the file settings.txt by replacing 'Old Setting' with 'New Setting' without performing a dry run.",
+        "expected_indicators": [
+          "changed",
+          "update",
+          "git diff"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "changed",
+            "update",
+            "git diff"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.005589",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "invalid_path",
+        "description": "Test the tool's response when a non-existent file path is provided.",
+        "prompt": "Attempt to edit a file at the path '/tmp/nonexistent.txt' by replacing 'foo' with 'bar' using a dry run.",
+        "expected_indicators": [
+          "not found",
+          "error",
+          "no such file"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 10.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [
+            "not found"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "unexpected",
+            "exception"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.005589",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "create_directory": [
+      {
+        "test_name": "create_single_directory",
+        "description": "Test creating a single directory that does not exist. Verifies that the directory is created and the output is in directory_listing format.",
+        "prompt": "Create a new directory at '/projects/new_project'.",
+        "expected_indicators": [
+          "new_project",
           "directory",
-          ".py",
-          ".json"
+          "listing"
         ],
         "expected_format": "directory_listing",
         "timeout_seconds": 10.0,
         "critical": true,
         "success_criteria": {
-          "contains_file_extensions": [
-            ".py",
-            ".json"
+          "min_response_length": 20,
+          "contains_keywords": [
+            "new_project",
+            "directory"
           ],
-          "min_items": 3
-        }
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "failed",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.006589",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "create_nested_directories",
+        "description": "Test creating nested directories where parent directories may not exist, ensuring proper recursive directory creation.",
+        "prompt": "Ensure the full path '/projects/new_project/src' exists by creating all necessary directories.",
+        "expected_indicators": [
+          "new_project",
+          "src",
+          "directory"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 20.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 15,
+          "contains_keywords": [
+            "new_project",
+            "src"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.006589",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "create_existing_directory",
+        "description": "Test that invoking the tool on an already existing directory does not cause an error and returns a proper directory listing.",
+        "prompt": "Check that the directory '/projects/existing_project' exists without error.",
+        "expected_indicators": [
+          "existing_project",
+          "directory",
+          "listing"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 10.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [
+            "existing_project",
+            "directory"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:16.006589",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "list_directory": [
+      {
+        "test_name": "list_current_directory",
+        "description": "Test listing the contents of the current directory to verify that both files and directories are correctly prefixed with [FILE] and [DIR].",
+        "prompt": "List all files and directories in the current directory.",
+        "expected_indicators": [
+          "[FILE]",
+          "[DIR]"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 10.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "[FILE]",
+            "[DIR]"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.349417",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "list_specific_directory",
+        "description": "Test listing the contents of a specified valid directory to verify the output correctness when a valid directory path is provided.",
+        "prompt": "List all files and directories in the '/home/user/documents' directory.",
+        "expected_indicators": [
+          "[FILE]",
+          "[DIR]"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "[FILE]",
+            "[DIR]"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.349417",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "list_nonexistent_directory",
+        "description": "Test the tool\u2019s response when an invalid or non-existent directory path is provided. The tool should handle the error gracefully.",
+        "prompt": "List all files and directories in the '/invalid/path' directory.",
+        "expected_indicators": [
+          "not found",
+          "error"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 20.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [
+            "not found"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.349417",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "directory_tree": [
+      {
+        "test_name": "list_current_directory",
+        "description": "Test listing contents of the current directory using a '.' path input.",
+        "prompt": "List all files and directories in the current directory.",
+        "expected_indicators": [
+          "name",
+          "type",
+          "children"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 10.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "file",
+            "directory"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "permission"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.351422",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "list_var_log_directory",
+        "description": "Test listing contents for a directory with a recursive structure like '/var/log'.",
+        "prompt": "Display the full recursive directory tree for the '/var/log' directory.",
+        "expected_indicators": [
+          "name",
+          "type",
+          "children",
+          "directory"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 20.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 30,
+          "contains_keywords": [
+            "log",
+            "directory"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.351422",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "non_existent_directory",
+        "description": "Test handling of a non-existent directory to ensure proper error messages are returned.",
+        "prompt": "List all files and directories in '/path/to/nonexistent_directory'.",
+        "expected_indicators": [
+          "not found",
+          "error",
+          "directory"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 10.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [
+            "not found"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "fatal",
+            "crash"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.351422",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "move_file": [
+      {
+        "test_name": "basic_move",
+        "description": "Test moving a file from one allowed directory to another where the destination does not exist.",
+        "prompt": "Move file log.txt from /var/logs to /var/archive/log.txt.",
+        "expected_indicators": [
+          "moved",
+          "success",
+          "archive",
+          "log.txt"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "moved",
+            "success"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "not found"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.352422",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "rename_file",
+        "description": "Test renaming a file within the same directory.",
+        "prompt": "Rename file data.txt to data_backup.txt in the current directory.",
+        "expected_indicators": [
+          "renamed",
+          "data_backup.txt",
+          "success"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 10.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "renamed",
+            "success"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "not found"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.352422",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "destination_exists_error",
+        "description": "Test attempting to move a file where the destination already exists, expecting an error response.",
+        "prompt": "Attempt to move file report.doc from /reports to /reports/report.doc where report.doc already exists.",
+        "expected_indicators": [
+          "destination exists",
+          "error"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 20.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 15,
+          "contains_keywords": [
+            "destination exists",
+            "error"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "unexpected",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.352422",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "move_directory",
+        "description": "Test moving a directory from one location to another.",
+        "prompt": "Move directory old_logs from /var to new_logs in /var.",
+        "expected_indicators": [
+          "directory",
+          "moved",
+          "success"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 25,
+          "contains_keywords": [
+            "directory",
+            "success"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.352422",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "move_file_outside_allowed",
+        "description": "Test attempting to move a file from a secure directory to a public directory, expecting a permission error.",
+        "prompt": "Move file secret.txt from /secure to /public/secret.txt.",
+        "expected_indicators": [
+          "permission",
+          "not allowed",
+          "error"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 25.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "permission",
+            "denied",
+            "not allowed"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "failed due to unexpected",
+            "internal error"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:24.352422",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "search_files": [
+      {
+        "test_name": "config_file_search",
+        "description": "Search for server_config.json in the configuration directory",
+        "prompt": "Search for the server_config.json file and display its full path.",
+        "expected_indicators": [
+          "server_config",
+          "json",
+          "path"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 20,
+          "contains_keywords": [
+            "server_config",
+            "json"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:34.334438",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "recursive_log_search",
+        "description": "Search recursively for any file or directory containing 'log' while excluding directories containing 'tmp'.",
+        "prompt": "Recursively search for files and directories with name 'log' while excluding paths containing 'tmp'.",
+        "expected_indicators": [
+          "log"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 20.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 25,
+          "contains_keywords": [
+            "log"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "error",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:34.334438",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "pattern_not_found_search",
+        "description": "Attempt to search for a non-existent pattern to test how the tool handles no results.",
+        "prompt": "Search for files containing 'nonexistent_pattern_123' in the home directory.",
+        "expected_indicators": [
+          "not found",
+          "empty",
+          "no result"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 10.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "error",
+            "failed"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:34.334438",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "get_file_info": [
+      {
+        "test_name": "valid_file_info",
+        "description": "Retrieve metadata for an existing file, checking for details like size, creation time, last modified time, and permissions.",
+        "prompt": "Get file details for /etc/server_config.json file.",
+        "expected_indicators": [
+          "size",
+          "creation",
+          "permissions",
+          "modified"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 50,
+          "contains_keywords": [
+            "size",
+            "creation",
+            "permissions",
+            "modified"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:46.455794",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "directory_metadata",
+        "description": "Retrieve and validate metadata for an existing directory, ensuring directory-specific details are correctly reported.",
+        "prompt": "Retrieve detailed metadata for the /var/log directory.",
+        "expected_indicators": [
+          "directory",
+          "size",
+          "contents",
+          "permissions"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 20.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 30,
+          "contains_keywords": [
+            "directory",
+            "permissions",
+            "contents"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "exception"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:46.455794",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "nonexistent_file",
+        "description": "Test the tool's handling of a file path that does not exist, expecting a graceful response indicating that the file is not found.",
+        "prompt": "Get file info for /unknown/path/file.txt.",
+        "expected_indicators": [
+          "not found",
+          "error",
+          "missing"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 10.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [
+            "not found",
+            "missing"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "error",
+            "permission denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:46.455794",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "list_allowed_directories": [
+      {
+        "test_name": "basic_directory_listing",
+        "description": "Basic test for retrieving all allowed directories from the server.",
+        "prompt": "List all allowed directories on the server.",
+        "expected_indicators": [
+          "allowed",
+          "directories"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [
+            "allowed",
+            "directory"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "not found"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:53.951414",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "directory_listing_with_file_types",
+        "description": "Test listing allowed directories along with file type details.",
+        "prompt": "Display the list of allowed directories along with file type details.",
+        "expected_indicators": [
+          "allowed",
+          "directory",
+          "file",
+          "type"
+        ],
+        "expected_format": "directory_listing",
+        "timeout_seconds": 20.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 15,
+          "contains_keywords": [
+            "allowed",
+            "directory",
+            "file",
+            "type"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "denied"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:09:53.951414",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "search_papers": [
+      {
+        "test_name": "basic_ml_search",
+        "description": "Test searching for papers about machine learning and returning paper IDs.",
+        "prompt": "Query the arXiv database for papers related to \"machine learning\" using the provided parameters. Deliver exactly 2 arXiv paper IDs in a JSON array format, without any extra commentary.",
+        "expected_indicators": [
+          "paper",
+          "machine learning",
+          "id"
+        ],
+        "expected_format": "list_of_ids",
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [],
+          "contains_arxiv_ids": true,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed",
+            "not found"
+          ]
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-06-17T23:15:46.720457",
+            "original_prompt": "Search for papers about machine learning",
+            "optimized_prompt": "\"Using the search_papers tool, search for academic papers on the topic 'machine learning'. Return a JSON formatted list containing exactly 2 arXiv paper identifiers (IDs) as defined by the tool's output format.\"",
+            "failure_context": "Expected JSON content not found | Response: 1909.03550v1",
+            "tool_arguments": {
+              "topic": "machine learning",
+              "max_results": 2
+            },
+            "strategy": "dspy_based"
+          },
+          {
+            "timestamp": "2025-06-17T23:20:49.015922",
+            "original_prompt": "\"Using the search_papers tool, search for academic papers on the topic 'machine learning'. Return a JSON formatted list containing exactly 2 arXiv paper identifiers (IDs) as defined by the tool's output format.\"",
+            "optimized_prompt": "Search arXiv for academic papers on \"machine learning\" and return exactly 2 paper identifiers. The result must be a JSON array containing the paper IDs.",
+            "failure_context": "Expected JSON content not found | Response: 1909.03550v1",
+            "tool_arguments": {
+              "topic": "machine learning",
+              "max_results": 2
+            },
+            "strategy": "dspy_based"
+          },
+          {
+            "timestamp": "2025-06-17T23:23:15.694579",
+            "original_prompt": "Search arXiv for academic papers on \"machine learning\" and return exactly 2 paper identifiers. The result must be a JSON array containing the paper IDs.",
+            "optimized_prompt": "Query the arXiv database for papers related to \"machine learning\" using the provided parameters. Deliver exactly 2 arXiv paper IDs in a JSON array format, without any extra commentary.",
+            "failure_context": "Expected JSON content not found | Response: 1909.03550v1",
+            "tool_arguments": {
+              "topic": "machine learning",
+              "max_results": 2
+            },
+            "strategy": "dspy_based"
+          }
+        ],
+        "generated_at": "2025-06-17T23:10:03.840018",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "custom_max_results_ai",
+        "description": "Test searching for papers about artificial intelligence with a custom max_results parameter of 3, expecting exactly 3 IDs.",
+        "prompt": "Using the provided parameters, perform a search on arXiv for scholarly articles categorized under \"artificial intelligence\". Retrieve exactly three unique arXiv paper identifiers and output them strictly as a JSON array of strings (for example, [\"1909.03550v1\", \"2001.12345v2\", \"2103.00001v1\"]). Do not include any additional content in the output.",
+        "expected_indicators": [
+          "paper",
+          "artificial intelligence",
+          "id"
+        ],
+        "expected_format": "list_of_ids",
+        "timeout_seconds": 40.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [],
+          "contains_arxiv_ids": true,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "failed"
+          ]
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-06-17T23:15:49.366161",
+            "original_prompt": "Search for papers on artificial intelligence with max_results set to 3. Ensure exactly 3 paper IDs are returned.",
+            "optimized_prompt": "Search arXiv for academic papers focused on artificial intelligence. Use the supplied parameters to retrieve exactly 3 paper IDs. Return the results as a JSON array of strings where each string is an arXiv paper identifier (e.g., [\"1909.03550v1\", \"2001.12345v2\"]).",
+            "failure_context": "Expected JSON content not found | Response: 2304.02924v1",
+            "tool_arguments": {
+              "topic": "artificial intelligence",
+              "max_results": 3
+            },
+            "strategy": "dspy_based"
+          },
+          {
+            "timestamp": "2025-06-17T23:20:54.204096",
+            "original_prompt": "Search arXiv for academic papers focused on artificial intelligence. Use the supplied parameters to retrieve exactly 3 paper IDs. Return the results as a JSON array of strings where each string is an arXiv paper identifier (e.g., [\"1909.03550v1\", \"2001.12345v2\"]).",
+            "optimized_prompt": "Using the provided parameters, perform a search on arXiv for scholarly articles categorized under \"artificial intelligence\". Retrieve exactly three unique arXiv paper identifiers and output them strictly as a JSON array of strings (for example, [\"1909.03550v1\", \"2001.12345v2\", \"2103.00001v1\"]). Do not include any additional content in the output.",
+            "failure_context": "Expected JSON content not found | Response: 2304.02924v1",
+            "tool_arguments": {
+              "topic": "artificial intelligence",
+              "max_results": 3
+            },
+            "strategy": "dspy_based"
+          }
+        ],
+        "generated_at": "2025-06-17T23:10:03.840018",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "no_result_topic",
+        "description": "Test searching for papers with a topic that is unlikely to yield any results.",
+        "prompt": "Search for papers about topic xyz123whichreturnsnone",
+        "expected_indicators": [
+          "not found",
+          "empty"
+        ],
+        "expected_format": "list_of_ids",
+        "timeout_seconds": 20.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 2,
+          "contains_keywords": [],
+          "contains_arxiv_ids": false,
+          "contains_json": true,
+          "acceptable_not_found": true,
+          "no_error_keywords": [
+            "error",
+            "failed"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:10:03.840018",
+        "generated_by": "llm_dspy"
+      }
+    ],
+    "extract_info": [
+      {
+        "test_name": "valid_paper_id",
+        "description": "Tests extraction of paper information with a valid paper id.",
+        "prompt": "Retrieve the academic paper details for the provided paper ID \"test_paper_123\" from the local database. The response must be in JSON format and include the following fields: \n- title \n- authors \n- summary \n- publication_date \n- pdf_url \nIf the paper is not available in the database, return a JSON object with a field \"message\" containing the text \"no saved information\".",
+        "expected_indicators": [
+          "paper",
+          "1234.5678",
+          "title",
+          "authors"
+        ],
+        "expected_format": "json_content",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 30,
+          "contains_keywords": [
+            "paper",
+            "info"
+          ],
+          "contains_arxiv_ids": true,
+          "contains_json": true,
+          "acceptable_not_found": false,
+          "no_error_keywords": [
+            "error",
+            "not found",
+            "failed"
+          ]
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-06-17T23:15:52.001484",
+            "original_prompt": "Get paper details for paper ID '1234.5678'.",
+            "optimized_prompt": "Extract detailed information for the academic paper with the paper ID \"1234.5678\". Return the results as JSON that includes the paper's title, authors, summary, publication date, and PDF URL. If the paper is not found in the local database, output a JSON message stating \"no saved information\".",
+            "failure_context": "Expected JSON content not found | Response: There's no saved information related to paper 1234.5678.",
+            "tool_arguments": {
+              "paper_id": "1234.5678"
+            },
+            "strategy": "dspy_based"
+          },
+          {
+            "timestamp": "2025-06-17T23:20:57.487077",
+            "original_prompt": "Extract detailed information for the academic paper with the paper ID \"1234.5678\". Return the results as JSON that includes the paper's title, authors, summary, publication date, and PDF URL. If the paper is not found in the local database, output a JSON message stating \"no saved information\".",
+            "optimized_prompt": "Retrieve the academic paper details for the provided paper ID \"test_paper_123\" from the local database. The response must be in JSON format and include the following fields: \n- title \n- authors \n- summary \n- publication_date \n- pdf_url \nIf the paper is not available in the database, return a JSON object with a field \"message\" containing the text \"no saved information\".",
+            "failure_context": "No arXiv ID pattern found in response | Response: There's no saved information related to paper test_paper_123.",
+            "tool_arguments": {
+              "paper_id": "test_paper_123"
+            },
+            "strategy": "dspy_based"
+          }
+        ],
+        "generated_at": "2025-06-17T23:10:13.818090",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "non_existent_paper_id",
+        "description": "Tests extraction with a non-existent paper id, expecting an error message.",
+        "prompt": "Using the extract_info tool, lookup the academic paper corresponding to the paper_id \"test_paper_123\". Return a JSON object that includes the following keys: \"title\", \"authors\", \"summary\", \"publication_date\", and \"pdf_url\". If the paper is not present in the local repository, output the JSON object with a single key \"error\" whose value is \"no saved information\".",
+        "expected_indicators": [
+          "error",
+          "not found"
+        ],
+        "expected_format": "text",
+        "timeout_seconds": 15.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "contains_keywords": [
+            "error",
+            "not found"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": true,
+          "no_error_keywords": []
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-06-17T23:15:54.214485",
+            "original_prompt": "Get paper details for paper ID '0000.0000'.",
+            "optimized_prompt": "Extract detailed information about the academic paper with id \"0000.0000\". Return a JSON object with the following fields: title, authors, summary, publication_date, and pdf_url. If the paper is not found in the local database, return a message stating \"no saved information\".",
+            "failure_context": "Required keywords not found: ['error', 'not found'] | Response: There's no saved information related to paper 0000.0000.",
+            "tool_arguments": {
+              "paper_id": "0000.0000"
+            },
+            "strategy": "dspy_based"
+          },
+          {
+            "timestamp": "2025-06-17T23:21:01.228829",
+            "original_prompt": "Extract detailed information about the academic paper with id \"0000.0000\". Return a JSON object with the following fields: title, authors, summary, publication_date, and pdf_url. If the paper is not found in the local database, return a message stating \"no saved information\".",
+            "optimized_prompt": "Using the extract_info tool, lookup the academic paper corresponding to the paper_id \"test_paper_123\". Return a JSON object that includes the following keys: \"title\", \"authors\", \"summary\", \"publication_date\", and \"pdf_url\". If the paper is not present in the local repository, output the JSON object with a single key \"error\" whose value is \"no saved information\".",
+            "failure_context": "Required keywords not found: ['error', 'not found'] | Response: There's no saved information related to paper test_paper_123.",
+            "tool_arguments": {
+              "paper_id": "test_paper_123"
+            },
+            "strategy": "dspy_based"
+          }
+        ],
+        "generated_at": "2025-06-17T23:10:13.818090",
+        "generated_by": "llm_dspy"
+      },
+      {
+        "test_name": "empty_paper_id",
+        "description": "Tests extraction with an empty paper id to verify handling of missing input.",
+        "prompt": "Get paper details for paper ID ''.",
+        "expected_indicators": [
+          "error",
+          "invalid",
+          "missing"
+        ],
+        "expected_format": "text",
+        "timeout_seconds": 10.0,
+        "critical": false,
+        "success_criteria": {
+          "min_response_length": 5,
+          "contains_keywords": [
+            "invalid",
+            "missing"
+          ],
+          "contains_arxiv_ids": false,
+          "contains_json": false,
+          "acceptable_not_found": true,
+          "no_error_keywords": []
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:10:13.818090",
+        "generated_by": "llm_dspy"
       }
     ],
     "fetch": [
       {
         "test_name": "web_content_fetch",
         "description": "Test fetching web content",
-        "prompt": "Fetch the content from https://httpbin.org/json and show me what data is returned.",
+        "prompt": "Fetch the content from https://example.com and show me what data is returned.",
         "expected_indicators": [
-          "json",
           "content",
-          "data"
+          "data",
+          "example"
         ],
         "expected_format": "web_content",
         "timeout_seconds": 20.0,
         "critical": false,
         "success_criteria": {
-          "contains_keywords": [
-            "json"
-          ],
-          "min_response_length": 50
-        }
+          "min_response_length": 20,
+          "no_error_keywords": [
+            "failed",
+            "connection issue",
+            "error"
+          ]
+        },
+        "optimization_history": [],
+        "generated_at": "2025-06-17T23:15:03.824053",
+        "generated_by": "auto_generator"
       }
     ]
   },
-  "prompt_templates": {
-    "search_papers": {
-      "base_template": "Search for papers about {topic}. {constraints}",
-      "constraints_options": [
-        "Find exactly {max_results} papers and return their IDs.",
-        "Limit results to {max_results} papers.",
-        "Get {max_results} relevant papers on this topic."
-      ],
-      "optimization_history": []
-    },
-    "extract_info": {
-      "base_template": "Get detailed information about paper with ID '{paper_id}'. {details}",
-      "details_options": [
-        "Show me the title, authors, and summary.",
-        "Provide comprehensive information including metadata.",
-        "Extract all available details about this paper."
-      ],
-      "optimization_history": []
-    },
-    "read_file": {
-      "base_template": "Read the {filename} file and {action}.",
-      "action_options": [
-        "show me its contents",
-        "display the file content",
-        "return the file data"
-      ],
-      "optimization_history": []
-    },
-    "list_directory": {
-      "base_template": "List all {item_types} in the {location}. {format}",
-      "item_types_options": [
-        "files and directories",
-        "items",
-        "contents"
-      ],
-      "location_options": [
-        "current folder",
-        "current directory",
-        "working directory"
-      ],
-      "format_options": [
-        "Show me what's available.",
-        "Display the directory contents.",
-        "Provide a detailed listing."
-      ],
-      "optimization_history": []
-    },
-    "fetch": {
-      "base_template": "Fetch the content from {url} and {action}.",
-      "action_options": [
-        "show me what data is returned",
-        "display the retrieved content",
-        "return the fetched information"
-      ],
-      "optimization_history": []
-    }
-  },
+  "prompt_templates": {},
   "dspy_config": {
     "optimization_enabled": true,
-    "max_optimization_attempts": 3,
+    "max_optimization_attempts": 2,
     "success_threshold": 0.8,
-    "optimization_metric": "success_rate",
-    "prompt_variation_strategies": [
-      "rephrase_instruction",
-      "add_context",
-      "modify_constraints",
-      "change_tone"
-    ]
+    "optimization_metric": "success_rate"
   }
 }

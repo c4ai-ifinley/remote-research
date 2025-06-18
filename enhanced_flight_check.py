@@ -9,8 +9,10 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-# Import the DSPy optimizer
+# Import the DSPy optimizer and test case generator
 from dspy_optimizer import DSPyFlightOptimizer, OptimizationContext
+from test_case_generator import auto_generate_test_cases
+from llm_test_generator import llm_generate_test_cases
 
 # Import color utilities
 from color_utils import (
@@ -150,26 +152,49 @@ class EnhancedFlightChecker:
         self.load_test_cases()
 
     def load_test_cases(self):
-        """Load test cases from JSON configuration"""
+        """Load test cases from JSON configuration with LLM auto-generation"""
+        # Get available tools for auto-generation
+        available_tools = [tool["name"] for tool in self.chatbot.available_tools]
+
+        # Try LLM generation first, fallback to rule-based
+        dspy_print("Attempting LLM-powered test case generation...")
+        if llm_generate_test_cases(available_tools, self.chatbot, self.config_path):
+            success_print("LLM-generated missing test cases")
+        elif auto_generate_test_cases(available_tools, self.config_path):
+            system_print("Auto-generated missing test cases (rule-based)")
+
+        # Load the configuration (now guaranteed to exist)
         config = self.optimizer.load_config()
         test_cases_config = config.get("test_cases", {})
 
         for tool_name, tool_tests in test_cases_config.items():
-            self.test_cases[tool_name] = []
-            for test_config in tool_tests:
-                test_case = PromptTestCase(
-                    tool_name=tool_name,
-                    test_name=test_config["test_name"],
-                    description=test_config["description"],
-                    prompt=test_config["prompt"],
-                    expected_indicators=test_config.get("expected_indicators", []),
-                    expected_format=test_config.get("expected_format", "text"),
-                    timeout_seconds=test_config.get("timeout_seconds", 30.0),
-                    critical=test_config.get("critical", True),
-                    success_criteria=test_config.get("success_criteria", {}),
-                    optimization_history=test_config.get("optimization_history", []),
-                )
-                self.test_cases[tool_name].append(test_case)
+            # Only load test cases for available tools
+            if tool_name in available_tools:
+                self.test_cases[tool_name] = []
+                for test_config in tool_tests:
+                    test_case = PromptTestCase(
+                        tool_name=tool_name,
+                        test_name=test_config["test_name"],
+                        description=test_config["description"],
+                        prompt=test_config["prompt"],
+                        expected_indicators=test_config.get("expected_indicators", []),
+                        expected_format=test_config.get("expected_format", "text"),
+                        timeout_seconds=test_config.get("timeout_seconds", 30.0),
+                        critical=test_config.get("critical", True),
+                        success_criteria=test_config.get("success_criteria", {}),
+                        optimization_history=test_config.get(
+                            "optimization_history", []
+                        ),
+                    )
+                    self.test_cases[tool_name].append(test_case)
+            else:
+                debug_print(f"Skipping test cases for unavailable tool: {tool_name}")
+
+        # Log what was loaded
+        total_tests = sum(len(tests) for tests in self.test_cases.values())
+        system_print(
+            f"Loaded {total_tests} test cases for {len(self.test_cases)} tools"
+        )
 
     def set_verbosity(self, level: VerbosityLevel):
         """Set the verbosity level for flight check output"""
@@ -190,9 +215,19 @@ class EnhancedFlightChecker:
                 error_message=f"Tool '{test_case.tool_name}' not available",
             )
 
+        # Skip network-dependent tests if they've been failing
+        if test_case.tool_name == "fetch" and not test_case.critical:
+            # Quick network connectivity check
+            if not await self._check_network_connectivity():
+                return TestReport(
+                    test_case=test_case,
+                    result=TestResult.SKIP,
+                    execution_time=0,
+                    error_message="Network connectivity issues detected, skipping fetch test",
+                )
+
         try:
             # Execute the prompt through the chatbot's query processing
-            # This simulates how a user would interact with the system
             response = await self._execute_prompt_query(test_case)
 
             # Validate the response
@@ -225,6 +260,19 @@ class EnhancedFlightChecker:
                 execution_time=time.time() - start_time,
                 error_message=str(e),
             )
+
+    async def _check_network_connectivity(self) -> bool:
+        """Quick check for network connectivity"""
+        try:
+            import aiohttp
+
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=5)
+            ) as session:
+                async with session.get("https://example.com") as response:
+                    return response.status == 200
+        except:
+            return False
 
     async def _execute_prompt_query(self, test_case: PromptTestCase) -> str:
         """Execute a prompt query through the chatbot system"""
