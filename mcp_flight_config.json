@@ -1,0 +1,141 @@
+{
+  "learned_tests": {
+    "read_file": [
+      {
+        "test_name": "read_file_natural_test_1",
+        "prompt": "What's in the flight_check_test.txt file?",
+        "expected_indicators": [
+          "content",
+          "file",
+          "contains"
+        ],
+        "success_criteria": {
+          "min_response_length": 5
+        },
+        "last_success": "2025-07-01T18:00:18.803970",
+        "success_count": 2
+      }
+    ],
+    "read_multiple_files": [
+      {
+        "test_name": "read_multiple_files_natural_test_1",
+        "prompt": "What's in the flight_check_test.txt file?",
+        "expected_indicators": [
+          "content",
+          "file",
+          "contains"
+        ],
+        "success_criteria": {
+          "min_response_length": 5
+        },
+        "last_success": "2025-07-01T18:00:18.803970",
+        "success_count": 1
+      },
+      {
+        "test_name": "read_multiple_files_natural_test_2",
+        "prompt": "Show me the contents of flight_check_test.txt",
+        "expected_indicators": [
+          "content",
+          "file",
+          "contains"
+        ],
+        "success_criteria": {
+          "min_response_length": 5
+        },
+        "last_success": "2025-07-01T18:00:18.804969",
+        "success_count": 1
+      }
+    ],
+    "create_directory": [
+      {
+        "test_name": "create_directory_natural_test_1",
+        "prompt": "What's in the flight_check_test.txt file?",
+        "expected_indicators": [
+          "content",
+          "file",
+          "contains"
+        ],
+        "success_criteria": {
+          "min_response_length": 5
+        },
+        "last_success": "2025-07-01T18:00:18.806969",
+        "success_count": 1
+      },
+      {
+        "test_name": "create_directory_natural_test_2",
+        "prompt": "Show me the contents of flight_check_test.txt",
+        "expected_indicators": [
+          "content",
+          "file",
+          "contains"
+        ],
+        "success_criteria": {
+          "min_response_length": 5
+        },
+        "last_success": "2025-07-01T18:00:18.808020",
+        "success_count": 1
+      }
+    ],
+    "get_file_info": [
+      {
+        "test_name": "get_file_info_natural_test_1",
+        "prompt": "What's in the flight_check_test.txt file?",
+        "expected_indicators": [
+          "content",
+          "file",
+          "contains"
+        ],
+        "success_criteria": {
+          "min_response_length": 5
+        },
+        "last_success": "2025-07-01T18:00:18.808020",
+        "success_count": 1
+      },
+      {
+        "test_name": "get_file_info_natural_test_2",
+        "prompt": "Show me the contents of flight_check_test.txt",
+        "expected_indicators": [
+          "content",
+          "file",
+          "contains"
+        ],
+        "success_criteria": {
+          "min_response_length": 5
+        },
+        "last_success": "2025-07-01T18:00:18.809939",
+        "success_count": 1
+      }
+    ],
+    "fetch": [
+      {
+        "test_name": "fetch_natural_test_1",
+        "prompt": "Get the content from https://httpbin.org/json",
+        "expected_indicators": [
+          "content",
+          "data",
+          "response"
+        ],
+        "success_criteria": {
+          "min_response_length": 10
+        },
+        "last_success": "2025-07-01T18:00:18.810879",
+        "success_count": 1
+      },
+      {
+        "test_name": "fetch_natural_test_2",
+        "prompt": "What's at https://httpbin.org/json?",
+        "expected_indicators": [
+          "content",
+          "data",
+          "response"
+        ],
+        "success_criteria": {
+          "min_response_length": 10
+        },
+        "last_success": "2025-07-01T18:00:18.812352",
+        "success_count": 1
+      }
+    ]
+  },
+  "last_updated": "2025-07-01T18:00:18.812352"
+}

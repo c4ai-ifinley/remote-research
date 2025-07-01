@@ -9,10 +9,10 @@ import nest_asyncio
 import os
 import traceback
 
-# Import the enhanced flight check system
-from enhanced_flight_check import EnhancedFlightChecker, VerbosityLevel
+# Import the NEW generic flight check system
+from mcp_flight_checker import MCPFlightChecker, VerbosityLevel, quick_flight_check
 
-# Import color utilities
+# Import color utilities (keep your existing color_utils.py)
 from color_utils import (
     system_print,
     error_print,
@@ -20,12 +20,12 @@ from color_utils import (
     warning_print,
     chat_input_print,
     colored_print,
+    debug_print,
     Colors,
     header_print,
 )
 
 nest_asyncio.apply()
-
 load_dotenv()
 
 
@@ -52,8 +52,8 @@ class MCP_ChatBot:
         # Sessions dict maps tool/prompt names or resource URIs to MCP client sessions
         self.sessions = {}
 
-        # Initialize flight checker
-        self.flight_checker = None  # Will be initialized after connections
+        # Initialize flight checker (will be set up after connections)
+        self.flight_checker = None
 
     async def connect_to_server(self, server_name, server_config):
         try:
@@ -85,7 +85,7 @@ class MCP_ChatBot:
                             {
                                 "name": tool.name,
                                 "description": tool.description,
-                                "input_schema": tool.inputSchema,
+                                "inputSchema": tool.inputSchema,
                             }
                         )
                 else:
@@ -139,41 +139,77 @@ class MCP_ChatBot:
     async def connect_to_servers(self):
         try:
             # Check if server_config.json exists
-            config_file = (
-                "server_config.json"  # Change to "test_config.json" for testing
-            )
+            config_file = "server_config.json"
             if not os.path.exists(config_file):
-                print(f"No {config_file} found. Running without MCP servers.")
+                warning_print(f"No {config_file} found. Running without MCP servers.")
                 return
 
-            with open(config_file, "r") as file:
-                data = json.load(file)
+            # Read and validate JSON
+            try:
+                with open(config_file, "r") as file:
+                    content = file.read().strip()
+
+                    # DEBUG: Check for corruption
+                    if content == "test_content":
+                        error_print(
+                            "DETECTED: server_config.json was overwritten with 'test_content'!"
+                        )
+                        error_print("Something in your code is corrupting this file.")
+                        error_print(
+                            "Please check for any code writing to server_config.json"
+                        )
+                        return
+
+                    if not content:
+                        error_print(
+                            f"{config_file} is empty. Please add server configuration."
+                        )
+                        return
+
+                    data = json.loads(content)
+            except json.JSONDecodeError as e:
+                error_print(f"Invalid JSON in {config_file}: {e}")
+                error_print(f"File content: '{content[:100]}...'")
+                error_print("Please check the file format. Expected format:")
+                error_print(
+                    '{"mcpServers": {"server_name": {"command": "...", "args": [...]}}}'
+                )
+                return
+            except Exception as e:
+                error_print(f"Error reading {config_file}: {e}")
+                return
+
             servers = data.get("mcpServers", {})
 
             if not servers:
-                print("No servers configured. Running without MCP servers.")
+                warning_print(
+                    "No servers configured in mcpServers. Running without MCP servers."
+                )
                 return
+
+            success_print(
+                f"Found {len(servers)} server(s) configured: {list(servers.keys())}"
+            )
 
             for server_name, server_config in servers.items():
                 try:
                     await self.connect_to_server(server_name, server_config)
                 except Exception as e:
-                    print(f"Failed to connect to {server_name}, skipping: {e}")
+                    error_print(f"Failed to connect to {server_name}: {e}")
                     continue
 
-            # Initialize enhanced flight checker after all connections are established
-            self.flight_checker = EnhancedFlightChecker(self)
+            # Initialize the NEW generic flight checker after all connections
+            if self.available_tools:
+                system_print("Initializing generic flight checker...")
+                self.flight_checker = MCPFlightChecker(self, VerbosityLevel.MINIMAL)
+                success_print("Flight checker ready!")
+            else:
+                warning_print("No tools available - flight checker disabled")
 
         except Exception as e:
-            print(f"Error loading server config: {e}")
-            print("Continuing without MCP servers...")
-            # Don't raise the exception, continue without serversload(file)
-            servers = data.get("mcpServers", {})
-            for server_name, server_config in servers.items():
-                await self.connect_to_server(server_name, server_config)
-        except Exception as e:
-            print(f"Error loading server config: {e}")
-            raise
+            error_print(f"Unexpected error in connect_to_servers: {e}")
+            debug_print(f"Full traceback: {traceback.format_exc()}")
+            warning_print("Continuing without MCP servers...")
 
     async def process_query(self, query):
         messages = [{"role": "user", "content": query}]
@@ -266,6 +302,7 @@ class MCP_ChatBot:
             if not has_tool_use:
                 break
 
+    # Keep your existing methods (get_resource, list_prompts, execute_prompt)
     async def get_resource(self, resource_uri):
         session = self.sessions.get(resource_uri)
 
@@ -342,14 +379,12 @@ class MCP_ChatBot:
             f"Available prompts: {[prompt['name'] for prompt in self.available_prompts]}"
         )
 
-        # Run flight check if we have tools and flight checker
+        # Run the NEW zero-configuration flight check
         if self.flight_checker and self.available_tools:
-            system_print("Running system flight check...")
+            system_print("Running automated flight check...")
 
-            # Use verbose verbosity to see optimization in action
-            flight_report = await self.flight_checker.run_flight_check(
-                parallel=False, verbosity=VerbosityLevel.VERBOSE
-            )
+            # Use the simple one-liner approach
+            flight_report = await quick_flight_check(self, VerbosityLevel.NORMAL)
 
             if not flight_report.system_ready:
                 warning_print("System not ready for full operation!")
@@ -357,9 +392,6 @@ class MCP_ChatBot:
                 if user_input != "y":
                     error_print("Aborting startup due to critical failures.")
                     return
-
-            # Export report for debugging
-            self.flight_checker.export_report(flight_report)
 
         print("\nType your queries or 'quit' to exit.")
         print("Use @folders to see available topics")
@@ -377,7 +409,7 @@ class MCP_ChatBot:
                 if query.lower() == "quit":
                     break
 
-                # Handle flight check command
+                # Handle flight check command with NEW system
                 if query.lower().startswith("/flight-check"):
                     if self.flight_checker:
                         parts = query.split()
@@ -396,8 +428,9 @@ class MCP_ChatBot:
                                 verbosity_str, VerbosityLevel.NORMAL
                             )
 
+                        # Use the new flight checker
                         await self.flight_checker.run_flight_check(
-                            parallel=False, verbosity=verbosity
+                            optimize_failures=True
                         )
                     else:
                         error_print("Flight checker not available (no tools connected)")
