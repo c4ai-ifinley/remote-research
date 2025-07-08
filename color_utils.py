@@ -2,12 +2,15 @@
 Cross-platform colored output utility using colorama
 """
 
+import os
+import sys
 import colorama
 from colorama import Fore, Back, Style
-import sys
+
 
 # Initialize colorama for cross-platform support
 colorama.init(autoreset=True)
+USE_COLOR = sys.stdout.isatty() and os.getenv("NO_COLOR") is None
 
 
 class Colors:
@@ -46,7 +49,10 @@ class Colors:
 
 def colored_print(text: str, color: str = Colors.CHAT, end: str = "\n"):
     """Print text with specified color"""
-    print(f"{color}{text}{Colors.RESET}", end=end)
+    if USE_COLOR:
+        print(f"{color}{text}{Colors.RESET}", end=end)
+    else:
+        print(text, end=end)
 
 
 def debug_print(text: str):

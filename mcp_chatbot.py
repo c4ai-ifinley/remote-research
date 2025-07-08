@@ -86,6 +86,7 @@ class MCP_ChatBot:
                                 "name": tool.name,
                                 "description": tool.description,
                                 "input_schema": tool.inputSchema,
+                                "annotations": tool.annotations,
                             }
                         )
                 else:

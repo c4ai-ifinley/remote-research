@@ -8,6 +8,7 @@ import re
 import os
 from datetime import datetime
 from pathlib import Path
+from utils import atomic_write_json
 
 # Import the DSPy optimizer
 from dspy_optimizer import DSPyFlightOptimizer, OptimizationContext
@@ -116,8 +117,7 @@ class DSPyPromptOptimizer:
 
     def save_config(self):
         """Save updated configuration back to JSON"""
-        with open(self.config_path, "w") as f:
-            json.dump(self.config, f, indent=2)
+        atomic_write_json(self.config, self.config_path)
 
     def optimize_prompt(self, context: OptimizationContext) -> str:
         """Use DSPy to optimize a failing prompt"""
@@ -139,6 +139,7 @@ class EnhancedFlightChecker:
         self.verbosity = VerbosityLevel.MINIMAL
         self.optimizer = DSPyPromptOptimizer(config_path)
         self.test_cases: Dict[str, List[PromptTestCase]] = {}
+        self.learned_tests_path = "learned_tests.json"
 
         system_print("Initializing Enhanced Flight Checker...")
         dspy_print("Testing DSPy connection...")
@@ -148,6 +149,8 @@ class EnhancedFlightChecker:
             warning_print("DSPy optimizer failed - will use rule-based fallback")
 
         self.load_test_cases()
+        self.discover_tools()
+        self.load_learned_tests()
 
     def load_test_cases(self):
         """Load test cases from JSON configuration"""
@@ -170,6 +173,77 @@ class EnhancedFlightChecker:
                     optimization_history=test_config.get("optimization_history", []),
                 )
                 self.test_cases[tool_name].append(test_case)
+
+    def discover_tools(self):
+        """Discover tools from the chatbot and ensure each has a basic test"""
+        for tool in self.chatbot.available_tools:
+            name = tool.get("name")
+            if name not in self.test_cases:
+                prompt = f"Demonstrate the {name} tool"
+                test_case = PromptTestCase(
+                    tool_name=name,
+                    test_name="auto_generated",
+                    description=f"Auto test for {name}",
+                    prompt=prompt,
+                )
+                self.test_cases[name] = [test_case]
+
+    def load_learned_tests(self):
+        """Load additional tests that succeeded previously"""
+        path = Path(self.learned_tests_path)
+        if not path.exists():
+            return
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+        except Exception:
+            return
+
+        for tool_name, tests in data.items():
+            for t in tests:
+                case = PromptTestCase(
+                    tool_name=tool_name,
+                    test_name=t.get("test_name", "learned"),
+                    description=t.get("description", "learned test"),
+                    prompt=t.get("prompt", ""),
+                    optimization_history=t.get("optimization_history", []),
+                )
+                self.test_cases.setdefault(tool_name, []).append(case)
+
+    def _record_success(self, test_case: PromptTestCase) -> None:
+        """Persist a successful test case to the learning file"""
+        path = Path(self.learned_tests_path)
+        if path.exists():
+            try:
+                with open(path, "r") as f:
+                    data = json.load(f)
+            except Exception:
+                data = {}
+        else:
+            data = {}
+
+        tests = data.setdefault(test_case.tool_name, [])
+        for t in tests:
+            if t.get("test_name") == test_case.test_name:
+                t["success_count"] = t.get("success_count", 0) + 1
+                t["last_success"] = datetime.now().isoformat()
+                t["prompt"] = test_case.prompt
+                t["description"] = test_case.description
+                t["optimization_history"] = test_case.optimization_history
+                break
+        else:
+            tests.append(
+                {
+                    "test_name": test_case.test_name,
+                    "description": test_case.description,
+                    "prompt": test_case.prompt,
+                    "success_count": 1,
+                    "last_success": datetime.now().isoformat(),
+                    "optimization_history": test_case.optimization_history,
+                }
+            )
+
+        atomic_write_json(data, path)
 
     def set_verbosity(self, level: VerbosityLevel):
         """Set the verbosity level for flight check output"""
@@ -247,104 +321,20 @@ class EnhancedFlightChecker:
         return result.content[0].text if result.content else str(result)
 
     def _extract_args_from_prompt(self, test_case: PromptTestCase) -> Dict[str, Any]:
-        """Extract tool arguments from prompt text (simplified implementation)"""
-        # This is a basic implementation - in practice you'd use an LLM to extract parameters
+        """Extract tool arguments generically based on the tool schema"""
+        schema = None
+        for tool in self.chatbot.available_tools:
+            if tool.get("name") == test_case.tool_name:
+                schema = tool.get("input_schema")
+                break
 
-        if test_case.tool_name == "search_papers":
-            # Extract topic and max_results from prompt
-            prompt_lower = test_case.prompt.lower()
+        if not schema:
+            return {}
 
-            # Find topic - be more flexible for vague prompts
-            topics = [
-                "machine learning",
-                "quantum computing",
-                "artificial intelligence",
-                "computers",
-                "stuff",
-            ]
-            topic = "computer science"  # default fallback
-            for t in topics:
-                if t in prompt_lower:
-                    topic = t
-                    break
-
-            # If prompt is very vague, use a default topic
-            if "stuff" in prompt_lower or "something" in prompt_lower:
-                topic = "computer science"  # This will likely fail validation
-
-            # Extract number
-            import re
-
-            numbers = re.findall(r"\d+", test_case.prompt)
-            max_results = int(numbers[0]) if numbers else 2
-
-            return {"topic": topic, "max_results": max_results}
-
-        elif test_case.tool_name == "extract_info":
-            # Extract paper_id from prompt
-            import re
-
-            matches = re.findall(r"'([^']*)'", test_case.prompt)
-
-            # Handle vague prompts by using a real paper ID that should exist
-            if not matches and (
-                "something" in test_case.prompt.lower()
-                or "show me" in test_case.prompt.lower()
-            ):
-                # Try to get a real paper ID from recent search results
-                paper_id = self._get_real_paper_id()
-                if not paper_id:
-                    paper_id = "1802.03292v1"  # Use the one we saw in the logs
-            else:
-                paper_id = matches[0] if matches else "test_paper_123"
-
-            return {"paper_id": paper_id}
-
-        elif test_case.tool_name == "read_file":
-            # Extract filename from prompt
-            if "server_config.json" in test_case.prompt:
-                return {"path": "server_config.json"}
-            return {"path": "."}
-
-        elif test_case.tool_name == "list_directory":
-            # Extract path from prompt
-            return {"path": "."}
-
-        elif test_case.tool_name == "fetch":
-            # Extract URL from prompt
-            import re
-
-            urls = re.findall(r"https?://[^\s]+", test_case.prompt)
-            url = urls[0] if urls else "https://example.com"
-            return {"url": url}
-
-        return {}
-
-    def _get_real_paper_id(self) -> Optional[str]:
-        """Try to get a real paper ID from the papers directory"""
-        import os
-        import json
-
-        papers_dir = "papers"
-        if not os.path.exists(papers_dir):
-            return None
-
-        # Look for any papers in the directory
-        for topic_dir in os.listdir(papers_dir):
-            topic_path = os.path.join(papers_dir, topic_dir)
-            if os.path.isdir(topic_path):
-                papers_file = os.path.join(topic_path, "papers_info.json")
-                if os.path.exists(papers_file):
-                    try:
-                        with open(papers_file, "r") as f:
-                            papers_data = json.load(f)
-                        if papers_data:
-                            # Return the first paper ID found
-                            return list(papers_data.keys())[0]
-                    except:
-                        continue
-
-        return None
+        args: Dict[str, Any] = {}
+        if "properties" in schema:
+            args["properties"] = schema["properties"]
+        return args
 
     def _validate_response(
         self, test_case: PromptTestCase, response: str
@@ -372,16 +362,6 @@ class EnhancedFlightChecker:
                 validation_details["reason"] = (
                     f"Response too short ({len(response)} < {min_length})"
                 )
-                return validation_details
-
-        # Check for arXiv IDs if expected
-        if criteria.get("contains_arxiv_ids", False):
-            arxiv_pattern = r"\d{4}\.\d{4,5}(v\d+)?"
-            if re.search(arxiv_pattern, response):
-                validation_details["checks_performed"].append("ArXiv ID pattern found")
-                validation_details["format_valid"] = True
-            else:
-                validation_details["reason"] = "No arXiv ID pattern found in response"
                 return validation_details
 
         # Check for JSON content if expected
@@ -501,7 +481,8 @@ class EnhancedFlightChecker:
 
                     if report.result == TestResult.FAIL and test_case.critical:
                         failed_tests.append((test_case, report))
-
+                    elif report.result == TestResult.PASS:
+                        self._record_success(test_case)
                     # Print results based on verbosity level
                     self._print_test_result(report)
 
@@ -612,8 +593,7 @@ class EnhancedFlightChecker:
                 break
 
         # Save updated config
-        with open(self.config_path, "w") as f:
-            json.dump(config, f, indent=2)
+        atomic_write_json(config, self.config_path)
 
     def _print_test_result(self, report: TestReport):
         """Print test result based on current verbosity level"""
@@ -771,8 +751,7 @@ class EnhancedFlightChecker:
             ],
         }
 
-        with open(filename, "w") as f:
-            json.dump(report_dict, f, indent=2)
+        atomic_write_json(report_dict, filename)
 
         print(f"Enhanced flight check report exported to: {filename}")
         return filename

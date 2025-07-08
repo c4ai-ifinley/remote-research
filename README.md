@@ -56,3 +56,6 @@ The system automatically tests all tools on startup with configurable verbosity:
 - **Debug**: Full diagnostic output
 
 Failed tests trigger automatic DSPy optimization using the o3-mini model for intelligent prompt improvement.
+
+### Cross-Platform Notes
+The utilities automatically disable colored output when the terminal does not support ANSI colors or when the `NO_COLOR` environment variable is set. All file operations use atomic writes and `pathlib` paths so the code works on Windows, macOS, and Linux.

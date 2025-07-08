@@ -159,7 +159,22 @@ class DSPyFlightOptimizer:
                 lm_config["base_url"] = base_url
                 debug_print(f"Using custom base URL: {base_url}")
 
-            debug_print(f"Initializing DSPy with config: {lm_config}")
+            # Using a lambda function and dictionary comprehension
+            formatted_config = {
+                key: (value if key != "api_key" else "*************" + str(value)[-5:])
+                for key, value in lm_config.items()
+            }
+
+            # Print all fields (inline solution)
+            debug_print(
+                "Initializing DSPy with config: {"
+                + (
+                    " | ".join(
+                        f"{key}: {value}" for key, value in formatted_config.items()
+                    )
+                )
+                + "}"
+            )
 
             # Initialize the language model
             lm = dspy.LM(**lm_config)
