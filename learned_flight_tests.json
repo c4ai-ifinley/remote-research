@@ -14,9 +14,7 @@
       "last_success": "2025-07-16T13:00:25.409730",
       "success_criteria": {
         "min_response_length": 20,
-        "required_patterns": [
-          "file"
-        ]
+        "required_patterns": ["file"]
       },
       "optimization_history": [],
       "generation_strategy": "learned"
@@ -27,10 +25,7 @@
       "prompt": "List all files and directories in the current folder.",
       "success_criteria": {
         "min_response_length": 10,
-        "required_patterns": [
-          "file",
-          "dir"
-        ]
+        "required_patterns": ["file", "dir"]
       },
       "success_count": 8,
       "last_success": "2025-07-16T13:00:25.449064",
@@ -43,10 +38,7 @@
       "prompt": "List the contents of the current directory by executing the list_directory tool with the path set to \".\", and ensure the output contains at least 10 characters.",
       "success_criteria": {
         "min_response_length": 10,
-        "required_patterns": [
-          "file",
-          "dir"
-        ]
+        "required_patterns": ["file", "dir"]
       },
       "success_count": 9,
       "last_success": "2025-07-16T13:00:25.481354",

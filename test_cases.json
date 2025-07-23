@@ -1,5 +1,3686 @@
 {
-  "test_cases": {},
-  "prompt_templates": {},
-  "dspy_config": {}
+  "test_cases": {
+    "read_file": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for read_file",
+        "prompt": "Test the read_file tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_content": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for read_file",
+        "prompt": "Test the read_file tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 1,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for read_file",
+        "prompt": "Test error handling for read_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for read_file",
+        "prompt": "Test the read_file tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for read_file",
+        "prompt": "Test error handling for read_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for read_file",
+        "prompt": "Read the file at the provided path \"test_file.txt\" and output its content. If the file is empty or the content does not exist, return a clear message indicating that the file showed no data.",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:23:21.379586",
+            "original_prompt": "Test the read_file tool with basic functionality",
+            "optimized_prompt": "Read the file at the provided path \"test_file.txt\" and output its content. If the file is empty or the content does not exist, return a clear message indicating that the file showed no data.",
+            "failure_context": "Error keywords found: ['error'] | Response: \"\"\"\r\nCross-platform colored output utility using colorama\r\n\"\"\"\r\n\r\nimport os\r\nimport sys\r\nimport colo",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for read_file",
+        "prompt": "Test the read_file tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for read_file",
+        "prompt": "Test error handling for read_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for read_file",
+        "prompt": "Read the file at the provided path \"test_file.txt\" and output its content. If the file is empty or the content does not exist, return a clear message indicating that the file showed no data.",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:23:21.379586",
+            "original_prompt": "Test the read_file tool with basic functionality",
+            "optimized_prompt": "Read the file at the provided path \"test_file.txt\" and output its content. If the file is empty or the content does not exist, return a clear message indicating that the file showed no data.",
+            "failure_context": "Error keywords found: ['error'] | Response: \"\"\"\r\nCross-platform colored output utility using colorama\r\n\"\"\"\r\n\r\nimport os\r\nimport sys\r\nimport colo",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "read_multiple_files": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for read_multiple_files",
+        "prompt": "For each file path listed in the \"paths\" parameter, retrieve the file's text content and display it preceded by the file name. If a file does not exist, output \"Not found: [file name]\" where the file name is the corresponding path value. Ensure the response remains user-friendly and avoids any technical error details.. Return the actual content. Provide detailed output.",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["paths"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "paths": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_content": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:43:28.683014",
+            "original_prompt": "Test the read_multiple_files tool with basic functionality",
+            "optimized_prompt": "For the file path provided in the 'paths' parameter, please retrieve and display the text content from the file \"test_item\". If the file does not exist, return a message stating \"Content not available for test_item\" instead of technical error messages.",
+            "failure_context": "Error keywords found: ['error'] | Response: test_item: Error - ENOENT: no such file or directory, open 'C:\\Users\\finl072\\workspace\\remote-resear",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:06:56.507169",
+            "original_prompt": "For the file path provided in the 'paths' parameter, please retrieve and display the text content from the file \"test_item\". If the file does not exist, return a message stating \"Content not available for test_item\" instead of technical error messages.",
+            "optimized_prompt": "For each file path listed in the \"paths\" parameter, retrieve the file's text content and display it preceded by the file name. If a file does not exist, output \"Not found: [file name]\" where the file name is the corresponding path value. Ensure the response remains user-friendly and avoids any technical error details.",
+            "failure_context": "Error keywords found: ['error'] | Response: test_item: Error - ENOENT: no such file or directory, open 'C:\\Users\\finl072\\workspace\\remote-resear",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:08:51.481569",
+            "original_prompt": "For each file path listed in the \"paths\" parameter, retrieve the file's text content and display it preceded by the file name. If a file does not exist, output \"Not found: [file name]\" where the file name is the corresponding path value. Ensure the response remains user-friendly and avoids any technical error details.",
+            "optimized_prompt": "For each file path listed in the \"paths\" parameter, retrieve the file's text content and display it preceded by the file name. If a file does not exist, output \"Not found: [file name]\" where the file name is the corresponding path value. Ensure the response remains user-friendly and avoids any technical error details.. Return the actual content. Provide detailed output.",
+            "failure_context": "Error keywords found: ['error'] | Response: test_item: Error - ENOENT: no such file or directory, open 'C:\\Users\\finl072\\workspace\\remote-resear",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": ["paths: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for read_multiple_files",
+        "prompt": "Test the read_multiple_files tool with parameters: paths",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["paths"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "paths": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 1,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["paths: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for read_multiple_files",
+        "prompt": "Test error handling for read_multiple_files tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["paths"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for read_multiple_files",
+        "prompt": "Test the read_multiple_files tool with parameters: paths",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["paths"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "paths": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for read_multiple_files",
+        "prompt": "Test error handling for read_multiple_files tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["paths"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for read_multiple_files",
+        "prompt": "Test the read_multiple_files tool with parameters: paths",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["paths"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "paths": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for read_multiple_files",
+        "prompt": "Test error handling for read_multiple_files tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["paths"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "write_file": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for write_file",
+        "prompt": "Test the write_file tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "content": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"]
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for write_file",
+        "prompt": "Test the write_file tool with parameters: path, content",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "content": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 2,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for write_file",
+        "prompt": "Test error handling for write_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for write_file",
+        "prompt": "Test the write_file tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "content": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for write_file",
+        "prompt": "Test the write_file tool with parameters: path, content",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "content": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for write_file",
+        "prompt": "Test error handling for write_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for write_file",
+        "prompt": "Test the write_file tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "content": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for write_file",
+        "prompt": "Test the write_file tool with parameters: path, content",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "content": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for write_file",
+        "prompt": "Test error handling for write_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "edit_file": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for edit_file",
+        "prompt": "Test the edit_file tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "edits": [],
+          "dryRun": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"]
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for edit_file",
+        "prompt": "Test the edit_file tool with parameters: path, edits, dryRun",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "edits": [],
+          "dryRun": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 3,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for edit_file",
+        "prompt": "Test error handling for edit_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for edit_file",
+        "prompt": "Test the edit_file tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "edits": [],
+          "dryRun": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for edit_file",
+        "prompt": "Test the edit_file tool with parameters: path, edits, dryRun",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "edits": [],
+          "dryRun": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for edit_file",
+        "prompt": "Test error handling for edit_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for edit_file",
+        "prompt": "Test the edit_file tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "edits": [],
+          "dryRun": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for edit_file",
+        "prompt": "Test the edit_file tool with parameters: path, edits, dryRun",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "edits": [],
+          "dryRun": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for edit_file",
+        "prompt": "Test error handling for edit_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "oldText": {
+                    "type": "string",
+                    "description": "Text to search for - must match exactly"
+                  },
+                  "newText": {
+                    "type": "string",
+                    "description": "Text to replace with"
+                  }
+                },
+                "required": ["oldText", "newText"],
+                "additionalProperties": false
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "description": "Preview changes using git-style diff format"
+            }
+          },
+          "required": ["path", "edits"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "create_directory": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for create_directory",
+        "prompt": "For the provided path \"test_file.txt\", please first inspect if a directory is present. If the directory does not exist, create it. If it is already in place, simply output a confirmation message stating that the directory is available. Ensure the process is seamless and does not trigger any interruptions or system alerts.",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_content": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:43:35.927953",
+            "original_prompt": "Test the create_directory tool with basic functionality",
+            "optimized_prompt": "Please create a new directory with the specified name \"test_file.txt\" in the current workspace. If the directory already exists, simply acknowledge its presence without producing any error messages.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: EEXIST: file already exists, mkdir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_1752",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:07:07.460954",
+            "original_prompt": "Please create a new directory with the specified name \"test_file.txt\" in the current workspace. If the directory already exists, simply acknowledge its presence without producing any error messages.",
+            "optimized_prompt": "Use the provided path \"test_file.txt\" to set up a directory. If the directory is already present, simply confirm that it exists, without generating error messages or interruptions.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: EEXIST: file already exists, mkdir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_1752",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:09:00.761538",
+            "original_prompt": "Use the provided path \"test_file.txt\" to set up a directory. If the directory is already present, simply confirm that it exists, without generating error messages or interruptions.",
+            "optimized_prompt": "For the provided path \"test_file.txt\", please first inspect if a directory is present. If the directory does not exist, create it. If it is already in place, simply output a confirmation message stating that the directory is available. Ensure the process is seamless and does not trigger any interruptions or system alerts.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: EEXIST: file already exists, mkdir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_1752",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for create_directory",
+        "prompt": "Test the create_directory tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 1,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for create_directory",
+        "prompt": "Test error handling for create_directory tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for create_directory",
+        "prompt": "Test the create_directory tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for create_directory",
+        "prompt": "Test error handling for create_directory tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for create_directory",
+        "prompt": "Test the create_directory tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for create_directory",
+        "prompt": "Test error handling for create_directory tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "list_directory": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for list_directory",
+        "prompt": "Examine the entity at the given path \"test_file.txt\". If it is a directory, generate an array containing the names of all files and subfolders in it. Otherwise, if it is not a directory, return an empty array without producing any errors.",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_list": true,
+          "expects_results": true,
+          "acceptable_not_found": true,
+          "expects_content": true
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:43:42.409133",
+            "original_prompt": "Test the list_directory tool with basic functionality",
+            "optimized_prompt": "\"Determine the directory containing 'test_file.txt' and return a list of all files and subdirectories within that directory.\"",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:07:21.794266",
+            "original_prompt": "\"Determine the directory containing 'test_file.txt' and return a list of all files and subdirectories within that directory.\"",
+            "optimized_prompt": "\"Using the provided path 'test_file.txt', list all items immediately contained within the specified location as an array. Return the names of files and folders if they exist, or an empty array if the location is empty.\"",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:09:42.118558",
+            "original_prompt": "\"Using the provided path 'test_file.txt', list all items immediately contained within the specified location as an array. Return the names of files and folders if they exist, or an empty array if the location is empty.\"",
+            "optimized_prompt": "Examine the entity at the given path \"test_file.txt\". If it is a directory, generate an array containing the names of all files and subfolders in it. Otherwise, if it is not a directory, return an empty array without producing any errors.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for list_directory",
+        "prompt": "Test the list_directory tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 1,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for list_directory",
+        "prompt": "Test error handling for list_directory tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "current_directory_listing",
+        "description": "Test listing current directory contents",
+        "prompt": "List all files and directories in the current folder. Show me what's available.",
+        "tool_schema": {},
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for list_directory",
+        "prompt": "Test the list_directory tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for list_directory",
+        "prompt": "Test error handling for list_directory tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "current_directory_listing",
+        "description": "Test listing current directory contents",
+        "prompt": "List all files and directories in the current folder. Show me what's available.",
+        "tool_schema": {},
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for list_directory",
+        "prompt": "Test the list_directory tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for list_directory",
+        "prompt": "Test error handling for list_directory tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "directory_tree": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for directory_tree",
+        "prompt": "For the path \"test_file.txt\", please determine if it refers to a directory. If it does, return a JSON object that includes a property (e.g., \"tree\") which is a list of all items present within that directory. If it does not refer to a directory, generate a JSON object that includes a message field stating that this is not a directory and an empty list under a property named \"contents\".",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_json": true,
+          "expects_list": true,
+          "expects_content": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:44:19.762778",
+            "original_prompt": "Test the directory_tree tool with basic functionality",
+            "optimized_prompt": "For the directory_tree tool, please verify the path \"test_file.txt\" to confirm if it represents a directory. If it is a directory, return the complete directory tree as a JSON array; otherwise, respond with a valid JSON output indicating that the path does not point to a directory (e.g., return a JSON object with a descriptive message and an empty array of contents).",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:07:28.850649",
+            "original_prompt": "For the directory_tree tool, please verify the path \"test_file.txt\" to confirm if it represents a directory. If it is a directory, return the complete directory tree as a JSON array; otherwise, respond with a valid JSON output indicating that the path does not point to a directory (e.g., return a JSON object with a descriptive message and an empty array of contents).",
+            "optimized_prompt": "Inspect the provided file system path \"test_file.txt\". If this path represents a folder, generate and return a complete JSON structure of its directory tree, including all entries in an array; if it is not a folder, return a JSON object containing a message that explains the path is not a directory and an empty array labeled \"contents\".",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:09:51.276348",
+            "original_prompt": "Inspect the provided file system path \"test_file.txt\". If this path represents a folder, generate and return a complete JSON structure of its directory tree, including all entries in an array; if it is not a folder, return a JSON object containing a message that explains the path is not a directory and an empty array labeled \"contents\".",
+            "optimized_prompt": "For the path \"test_file.txt\", please determine if it refers to a directory. If it does, return a JSON object that includes a property (e.g., \"tree\") which is a list of all items present within that directory. If it does not refer to a directory, generate a JSON object that includes a message field stating that this is not a directory and an empty list under a property named \"contents\".",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for directory_tree",
+        "prompt": "Test the directory_tree tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 1,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for directory_tree",
+        "prompt": "Test error handling for directory_tree tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for directory_tree",
+        "prompt": "Test the directory_tree tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for directory_tree",
+        "prompt": "Test error handling for directory_tree tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for directory_tree",
+        "prompt": "Test the directory_tree tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for directory_tree",
+        "prompt": "Test error handling for directory_tree tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "move_file": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for move_file",
+        "prompt": "\"Execute a file relocation: transfer the file from the given source to the designated destination. Once the move is complete, return a confirmation message detailing both the original (source) and the new (destination) file locations.\". Provide detailed output.",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": ["source", "destination"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "source": "test_value",
+          "destination": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"]
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:44:19.780671",
+            "original_prompt": "Test the move_file tool with basic functionality",
+            "optimized_prompt": "Test the move_file tool with basic functionality. Provide detailed output.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOENT: no such file or directory, rename 'C:\\Users\\finl072\\workspace\\remote-research\\test_va",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:07:28.869280",
+            "original_prompt": "Test the move_file tool with basic functionality. Provide detailed output.",
+            "optimized_prompt": "\"Execute a file relocation: transfer the file from the given source to the designated destination. Once the move is complete, return a confirmation message detailing both the original (source) and the new (destination) file locations.\"",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOENT: no such file or directory, rename 'C:\\Users\\finl072\\workspace\\remote-research\\test_va",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:10:00.671123",
+            "original_prompt": "\"Execute a file relocation: transfer the file from the given source to the designated destination. Once the move is complete, return a confirmation message detailing both the original (source) and the new (destination) file locations.\"",
+            "optimized_prompt": "\"Execute a file relocation: transfer the file from the given source to the designated destination. Once the move is complete, return a confirmation message detailing both the original (source) and the new (destination) file locations.\". Provide detailed output.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOENT: no such file or directory, rename 'C:\\Users\\finl072\\workspace\\remote-research\\test_va",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for move_file",
+        "prompt": "Test the move_file tool with parameters: source, destination",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": ["source", "destination"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "source": "test_value",
+          "destination": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 2,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for move_file",
+        "prompt": "Test error handling for move_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": ["source", "destination"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for move_file",
+        "prompt": "Test the move_file tool with parameters: source, destination",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": ["source", "destination"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "source": "test_value",
+          "destination": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for move_file",
+        "prompt": "Test error handling for move_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": ["source", "destination"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for move_file",
+        "prompt": "Test the move_file tool with parameters: source, destination",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": ["source", "destination"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "source": "test_value",
+          "destination": "test_value"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for move_file",
+        "prompt": "Test error handling for move_file tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": ["source", "destination"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "search_files": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for search_files",
+        "prompt": "Open the file specified in the \"path\" argument. Locate every occurrence of the substring indicated by the \"pattern\" argument (\"test_value\"). However, if any occurrence also includes the content defined in \"excludePatterns\" (\"test_item\"), skip it. After scanning the file, return all valid occurrences as the results, or respond with \"Not found\" if there are no valid matches.",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "excludePatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "required": ["path", "pattern"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "pattern": "test_value",
+          "excludePatterns": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_results": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:44:33.141915",
+            "original_prompt": "Test the search_files tool with basic functionality",
+            "optimized_prompt": "Using the \"search_files\" tool, please examine the file \"test_file.txt\" for any occurrences of the text \"test_value.\" If any part of the file\u2019s content includes \"test_value\" but also contains \"test_item\" (based on the excludePatterns), ignore those sections. Return all relevant matches or state clearly if no matching content is found.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:07:35.017141",
+            "original_prompt": "Using the \"search_files\" tool, please examine the file \"test_file.txt\" for any occurrences of the text \"test_value.\" If any part of the file\u2019s content includes \"test_value\" but also contains \"test_item\" (based on the excludePatterns), ignore those sections. Return all relevant matches or state clearly if no matching content is found.",
+            "optimized_prompt": "Inspect the content of the file \"test_file.txt\" to identify all instances of the sequence \"test_value\". While scanning, disregard any instance if it also includes the term \"test_item\". List every occurrence that meets these criteria, or indicate clearly if there are no valid findings.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:10:05.639677",
+            "original_prompt": "Inspect the content of the file \"test_file.txt\" to identify all instances of the sequence \"test_value\". While scanning, disregard any instance if it also includes the term \"test_item\". List every occurrence that meets these criteria, or indicate clearly if there are no valid findings.",
+            "optimized_prompt": "Open the file specified in the \"path\" argument. Locate every occurrence of the substring indicated by the \"pattern\" argument (\"test_value\"). However, if any occurrence also includes the content defined in \"excludePatterns\" (\"test_item\"), skip it. After scanning the file, return all valid occurrences as the results, or respond with \"Not found\" if there are no valid matches.",
+            "failure_context": "Error keywords found: ['error'] | Response: Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_17528",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for search_files",
+        "prompt": "Test the search_files tool with parameters: path, pattern, excludePatterns",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "excludePatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "required": ["path", "pattern"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "pattern": "test_value",
+          "excludePatterns": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 3,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for search_files",
+        "prompt": "Test error handling for search_files tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "excludePatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "required": ["path", "pattern"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for search_files",
+        "prompt": "Test the search_files tool with parameters: path, pattern, excludePatterns",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "excludePatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "required": ["path", "pattern"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "pattern": "test_value",
+          "excludePatterns": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for search_files",
+        "prompt": "Test error handling for search_files tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "excludePatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "required": ["path", "pattern"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for search_files",
+        "prompt": "Test the search_files tool with parameters: path, pattern, excludePatterns",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "excludePatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "required": ["path", "pattern"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt",
+          "pattern": "test_value",
+          "excludePatterns": ["test_item"]
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for search_files",
+        "prompt": "Test error handling for search_files tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "excludePatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "required": ["path", "pattern"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "get_file_info": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for get_file_info",
+        "prompt": "Test the get_file_info tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_content": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for get_file_info",
+        "prompt": "Test the get_file_info tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 1,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["path: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for get_file_info",
+        "prompt": "Test error handling for get_file_info tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for get_file_info",
+        "prompt": "Test the get_file_info tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for get_file_info",
+        "prompt": "Test the get_file_info tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for get_file_info",
+        "prompt": "Test error handling for get_file_info tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for get_file_info",
+        "prompt": "Test the get_file_info tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for get_file_info",
+        "prompt": "Test the get_file_info tool with parameters: path",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {
+          "path": "test_file.txt"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for get_file_info",
+        "prompt": "Test error handling for get_file_info tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "list_allowed_directories": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for list_allowed_directories",
+        "prompt": "Test the list_allowed_directories tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_list": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for list_allowed_directories",
+        "prompt": "Test error handling for list_allowed_directories tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for list_allowed_directories",
+        "prompt": "Test the list_allowed_directories tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for list_allowed_directories",
+        "prompt": "Test error handling for list_allowed_directories tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for list_allowed_directories",
+        "prompt": "Test the list_allowed_directories tool with basic functionality",
+        "tool_schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for list_allowed_directories",
+        "prompt": "Test error handling for list_allowed_directories tool",
+        "tool_schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "search_papers": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for search_papers",
+        "prompt": "Test the search_papers tool with basic functionality",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "topic": "test query",
+          "max_results": 5
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_list": true,
+          "expects_results": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for search_papers",
+        "prompt": "Test the search_papers tool with parameters: topic, max_results",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "topic": "test query",
+          "max_results": 5
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 2,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for search_papers",
+        "prompt": "Test error handling for search_papers tool",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for search_papers",
+        "prompt": "Test the search_papers tool with basic functionality",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "topic": "test query",
+          "max_results": 5
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for search_papers",
+        "prompt": "Test the search_papers tool with parameters: topic, max_results",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "topic": "test query",
+          "max_results": 5
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for search_papers",
+        "prompt": "Test error handling for search_papers tool",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for search_papers",
+        "prompt": "Test the search_papers tool with basic functionality",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "topic": "test query",
+          "max_results": 5
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for search_papers",
+        "prompt": "Test the search_papers tool with parameters: topic, max_results",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "topic": "test query",
+          "max_results": 5
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for search_papers",
+        "prompt": "Test error handling for search_papers tool",
+        "tool_schema": {
+          "properties": {
+            "topic": {
+              "title": "Topic",
+              "type": "string"
+            },
+            "max_results": {
+              "default": 5,
+              "title": "Max Results",
+              "type": "integer"
+            }
+          },
+          "required": ["topic"],
+          "title": "search_papersArguments",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "extract_info": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for extract_info",
+        "prompt": "Retrieve all stored details for the paper identified as \"test_id_123\" and output the information as a JSON object. Ensure that the JSON clearly enumerates any found data; if no data is associated with the given identifier, include a clear statement within the JSON that no information is available.",
+        "tool_schema": {
+          "properties": {
+            "paper_id": {
+              "title": "Paper Id",
+              "type": "string"
+            }
+          },
+          "required": ["paper_id"],
+          "title": "extract_infoArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "paper_id": "test_id_123"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"],
+          "expects_json": true,
+          "expects_results": true,
+          "acceptable_not_found": true
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:44:33.159967",
+            "original_prompt": "Test the extract_info tool with basic functionality",
+            "optimized_prompt": "Test the extract_info tool with basic functionality. Return results in JSON format. Provide detailed output.",
+            "failure_context": "Expected JSON content not found | Response: There's no saved information related to paper test_id_123.",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:07:35.035074",
+            "original_prompt": "Test the extract_info tool with basic functionality. Return results in JSON format. Provide detailed output.",
+            "optimized_prompt": "Using the provided paper_id \"test_id_123\", please search for and return any related information as a valid JSON object. The JSON output should include the search results; if no information is found for the paper, include a clear indicator that no data exists.",
+            "failure_context": "Expected JSON content not found | Response: There's no saved information related to paper test_id_123.",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:10:13.196639",
+            "original_prompt": "Using the provided paper_id \"test_id_123\", please search for and return any related information as a valid JSON object. The JSON output should include the search results; if no information is found for the paper, include a clear indicator that no data exists.",
+            "optimized_prompt": "Retrieve all stored details for the paper identified as \"test_id_123\" and output the information as a JSON object. Ensure that the JSON clearly enumerates any found data; if no data is associated with the given identifier, include a clear statement within the JSON that no information is available.",
+            "failure_context": "Expected JSON content not found | Response: There's no saved information related to paper test_id_123.",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": ["paper_id: "]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for extract_info",
+        "prompt": "Test the extract_info tool with parameters: paper_id",
+        "tool_schema": {
+          "properties": {
+            "paper_id": {
+              "title": "Paper Id",
+              "type": "string"
+            }
+          },
+          "required": ["paper_id"],
+          "title": "extract_infoArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "paper_id": "test_id_123"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 1,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["paper_id: "]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for extract_info",
+        "prompt": "Test error handling for extract_info tool",
+        "tool_schema": {
+          "properties": {
+            "paper_id": {
+              "title": "Paper Id",
+              "type": "string"
+            }
+          },
+          "required": ["paper_id"],
+          "title": "extract_infoArguments",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for extract_info",
+        "prompt": "Test the extract_info tool with parameters: paper_id",
+        "tool_schema": {
+          "properties": {
+            "paper_id": {
+              "title": "Paper Id",
+              "type": "string"
+            }
+          },
+          "required": ["paper_id"],
+          "title": "extract_infoArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "paper_id": "test_id_123"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for extract_info",
+        "prompt": "Test error handling for extract_info tool",
+        "tool_schema": {
+          "properties": {
+            "paper_id": {
+              "title": "Paper Id",
+              "type": "string"
+            }
+          },
+          "required": ["paper_id"],
+          "title": "extract_infoArguments",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for extract_info",
+        "prompt": "Test the extract_info tool with parameters: paper_id",
+        "tool_schema": {
+          "properties": {
+            "paper_id": {
+              "title": "Paper Id",
+              "type": "string"
+            }
+          },
+          "required": ["paper_id"],
+          "title": "extract_infoArguments",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "paper_id": "test_id_123"
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for extract_info",
+        "prompt": "Test error handling for extract_info tool",
+        "tool_schema": {
+          "properties": {
+            "paper_id": {
+              "title": "Paper Id",
+              "type": "string"
+            }
+          },
+          "required": ["paper_id"],
+          "title": "extract_infoArguments",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ],
+    "fetch": [
+      {
+        "test_name": "basic_functionality",
+        "description": "Basic functionality test for fetch",
+        "prompt": "Please connect to \"https://example.com/test\" to acquire the raw HTML content of the page. Starting at character index 1 (i.e., the second character), extract a portion of text corresponding to the provided maximum length of 5 characters and then, if necessary, continue extracting additional characters until the overall output reaches a minimum of 10 characters. Ensure that your final output is a continuous string free from any error messages or banned keywords such as \"error\", \"failed\", \"exception\", or \"invalid\".. Provide detailed output.",
+        "tool_schema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "exclusiveMaximum": 1000000,
+              "exclusiveMinimum": 0,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            }
+          },
+          "required": ["url"],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "url": "https://example.com/test",
+          "max_length": 5,
+          "start_index": 1,
+          "raw": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "min_response_length": 10,
+          "no_error_keywords": ["error", "failed", "exception", "invalid"]
+        },
+        "optimization_history": [
+          {
+            "timestamp": "2025-07-17T20:44:36.553342",
+            "original_prompt": "Test the fetch tool with basic functionality",
+            "optimized_prompt": "Retrieve and return 5 characters of the raw HTML content from the URL \"https://example.com/test\", starting at the second character (index 1).",
+            "failure_context": "Error keywords found: ['failed'] | Response: Failed to fetch robots.txt https://example.com/robots.txt due to a connection issue",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:07:55.815067",
+            "original_prompt": "Retrieve and return 5 characters of the raw HTML content from the URL \"https://example.com/test\", starting at the second character (index 1).",
+            "optimized_prompt": "Please connect to \"https://example.com/test\" to acquire the raw HTML content of the page. Starting at character index 1 (i.e., the second character), extract a portion of text corresponding to the provided maximum length of 5 characters and then, if necessary, continue extracting additional characters until the overall output reaches a minimum of 10 characters. Ensure that your final output is a continuous string free from any error messages or banned keywords such as \"error\", \"failed\", \"exception\", or \"invalid\".",
+            "failure_context": "Error keywords found: ['failed'] | Response: Failed to fetch https://example.com/test - status code 404",
+            "strategy": "dspy_optimization"
+          },
+          {
+            "timestamp": "2025-07-18T11:10:24.407662",
+            "original_prompt": "Please connect to \"https://example.com/test\" to acquire the raw HTML content of the page. Starting at character index 1 (i.e., the second character), extract a portion of text corresponding to the provided maximum length of 5 characters and then, if necessary, continue extracting additional characters until the overall output reaches a minimum of 10 characters. Ensure that your final output is a continuous string free from any error messages or banned keywords such as \"error\", \"failed\", \"exception\", or \"invalid\".",
+            "optimized_prompt": "Please connect to \"https://example.com/test\" to acquire the raw HTML content of the page. Starting at character index 1 (i.e., the second character), extract a portion of text corresponding to the provided maximum length of 5 characters and then, if necessary, continue extracting additional characters until the overall output reaches a minimum of 10 characters. Ensure that your final output is a continuous string free from any error messages or banned keywords such as \"error\", \"failed\", \"exception\", or \"invalid\".. Provide detailed output.",
+            "failure_context": "Error keywords found: ['failed'] | Response: Failed to fetch https://example.com/test - status code 404",
+            "strategy": "dspy_optimization"
+          }
+        ],
+        "auto_generated": true,
+        "context_requirements": ["url: URL to fetch"]
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for fetch",
+        "prompt": "Test the fetch tool with parameters: url, max_length, start_index, raw",
+        "tool_schema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "exclusiveMaximum": 1000000,
+              "exclusiveMinimum": 0,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            }
+          },
+          "required": ["url"],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "url": "https://example.com/test",
+          "max_length": 5,
+          "start_index": 1,
+          "raw": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {
+          "expects_parameters": true,
+          "parameter_count": 4,
+          "no_parameter_errors": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": ["url: URL to fetch"]
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for fetch",
+        "prompt": "Test error handling for fetch tool",
+        "tool_schema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "exclusiveMaximum": 1000000,
+              "exclusiveMinimum": 0,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            }
+          },
+          "required": ["url"],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": false,
+        "success_criteria": {
+          "handles_errors_gracefully": true,
+          "provides_error_message": true
+        },
+        "optimization_history": [],
+        "auto_generated": true,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for fetch",
+        "prompt": "Test the fetch tool with parameters: url, max_length, start_index, raw",
+        "tool_schema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "exclusiveMaximum": 1000000,
+              "exclusiveMinimum": 0,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            }
+          },
+          "required": ["url"],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "url": "https://example.com/test",
+          "max_length": 5,
+          "start_index": 1,
+          "raw": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for fetch",
+        "prompt": "Test error handling for fetch tool",
+        "tool_schema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "exclusiveMaximum": 1000000,
+              "exclusiveMinimum": 0,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            }
+          },
+          "required": ["url"],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "parameter_validation",
+        "description": "Parameter validation test for fetch",
+        "prompt": "Test the fetch tool with parameters: url, max_length, start_index, raw",
+        "tool_schema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "exclusiveMaximum": 1000000,
+              "exclusiveMinimum": 0,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            }
+          },
+          "required": ["url"],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "generated_arguments": {
+          "url": "https://example.com/test",
+          "max_length": 5,
+          "start_index": 1,
+          "raw": true
+        },
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      },
+      {
+        "test_name": "error_handling",
+        "description": "Error handling test for fetch",
+        "prompt": "Test error handling for fetch tool",
+        "tool_schema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "exclusiveMaximum": 1000000,
+              "exclusiveMinimum": 0,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            }
+          },
+          "required": ["url"],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "generated_arguments": {},
+        "expected_indicators": [],
+        "timeout_seconds": 30.0,
+        "critical": true,
+        "success_criteria": {},
+        "optimization_history": [],
+        "auto_generated": false,
+        "context_requirements": []
+      }
+    ]
+  },
+  "dspy_config": {
+    "optimization_enabled": true
+  }
 }
