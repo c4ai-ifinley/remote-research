@@ -1,5 +1,6 @@
 """
-DSPy-based prompt optimization for tool flight checks
+DSPy-based prompt optimization for MCP tools
+Uses only MCP schema information, no tool-specific knowledge.
 """
 
 import dspy
@@ -42,33 +43,40 @@ class OptimizationContext:
     """Context for prompt optimization"""
 
     tool_name: str
+    tool_schema: Dict[str, Any]
     original_prompt: str
     failure_reason: str
-    expected_output_format: str
+    generated_arguments: Dict[str, Any]
     success_criteria: Dict[str, Any]
     previous_attempts: List[str]
-    tool_arguments: Dict[str, Any] = None
 
 
 class ToolPromptSignature(dspy.Signature):
-    """Signature for tool prompt optimization"""
+    """Signature for MCP tool prompt optimization"""
 
-    tool_name = dspy.InputField(desc="The name of the tool being optimized")
-    tool_description = dspy.InputField(
-        desc="Detailed description of what the tool does and how it works"
+    tool_name = dspy.InputField(desc="The name of the MCP tool being optimized")
+    tool_schema = dspy.InputField(
+        desc="The complete MCP schema for this tool including input parameters and description"
     )
-    tool_arguments = dspy.InputField(
-        desc="The specific arguments/parameters that will be passed to the tool"
+    current_arguments = dspy.InputField(
+        desc="The specific arguments that will be passed to the tool when testing"
     )
-    failure_info = dspy.InputField(desc="Details about why the current prompt failed")
-    original_prompt = dspy.InputField(desc="The original prompt that failed")
+    failure_details = dspy.InputField(
+        desc="Detailed information about why the current prompt failed, including any error messages"
+    )
+    original_prompt = dspy.InputField(
+        desc="The original prompt that failed to work properly"
+    )
+    success_requirements = dspy.InputField(
+        desc="What constitutes a successful response for this tool"
+    )
     optimized_prompt = dspy.OutputField(
-        desc="A completely new, specific prompt that clearly instructs the tool what to do. Should be a complete replacement, not an addition to the original."
+        desc="A new, specific prompt that clearly instructs what the tool should accomplish. Must be completely different from the original and work with the provided arguments."
     )
 
 
 class PromptOptimizer(dspy.Module):
-    """DSPy module for optimizing tool prompts"""
+    """DSPy module for optimizing MCP tool prompts"""
 
     def __init__(self):
         super().__init__()
@@ -77,26 +85,37 @@ class PromptOptimizer(dspy.Module):
     def forward(
         self,
         tool_name: str,
-        tool_description: str,
-        tool_arguments: str,
-        failure_info: str,
+        tool_schema: str,
+        current_arguments: str,
+        failure_details: str,
         original_prompt: str,
+        success_requirements: str,
     ):
         return self.optimize(
             tool_name=tool_name,
-            tool_description=tool_description,
-            tool_arguments=tool_arguments,
-            failure_info=failure_info,
+            tool_schema=tool_schema,
+            current_arguments=current_arguments,
+            failure_details=failure_details,
             original_prompt=original_prompt,
+            success_requirements=success_requirements,
         )
 
 
 class ToolCallSignature(dspy.Signature):
-    """Signature for generating tool calls from natural language"""
+    """Signature for generating tool calls from user intent"""
 
-    tool_description = dspy.InputField(desc="Description of what the tool does")
-    user_intent = dspy.InputField(desc="What the user wants to accomplish")
-    tool_call = dspy.OutputField(desc="A clear, specific instruction to the tool")
+    tool_schema = dspy.InputField(
+        desc="The MCP schema describing what this tool does and its parameters"
+    )
+    user_intent = dspy.InputField(
+        desc="What the user wants to accomplish with this tool"
+    )
+    available_context = dspy.InputField(
+        desc="Any available context like file names, IDs, or other relevant information"
+    )
+    tool_instruction = dspy.OutputField(
+        desc="A clear, specific instruction that tells the tool exactly what to do"
+    )
 
 
 class ToolCallGenerator(dspy.Module):
@@ -106,21 +125,93 @@ class ToolCallGenerator(dspy.Module):
         super().__init__()
         self.generate = dspy.ChainOfThought(ToolCallSignature)
 
-    def forward(self, tool_description: str, user_intent: str):
-        return self.generate(tool_description=tool_description, user_intent=user_intent)
+    def forward(self, tool_schema: str, user_intent: str, available_context: str = ""):
+        return self.generate(
+            tool_schema=tool_schema,
+            user_intent=user_intent,
+            available_context=available_context,
+        )
 
 
-class DSPyFlightOptimizer:
-    """Advanced DSPy-based flight check optimizer"""
+class DSPyOptimizer:
+    """DSPy-based optimizer for any MCP tool"""
 
-    def __init__(self, anthropic_client=None):
-        self.anthropic_client = anthropic_client
+    def __init__(self, config_path: str = "test_cases.json"):
+        self.config_path = config_path
+        self.config = self.load_config()
+        self.optimization_enabled = self.config.get("dspy_config", {}).get(
+            "optimization_enabled", True
+        )
         self.optimizer = None
         self.call_generator = None
         self.setup_dspy()
 
+    def load_config(self) -> Dict:
+        """Load test configuration from JSON"""
+        try:
+            if os.path.exists(self.config_path):
+                with open(self.config_path, "r") as f:
+                    content = f.read().strip()
+                    if not content:
+                        # File exists but is empty
+                        print(
+                            f"Warning: {self.config_path} is empty. Using default configuration."
+                        )
+                        return self._get_default_config()
+
+                    config = json.loads(content)
+
+                    # Ensure config has expected structure
+                    if not isinstance(config, dict):
+                        print(
+                            f"Warning: Invalid config format in {self.config_path}. Using default configuration."
+                        )
+                        return self._get_default_config()
+
+                    # Add missing keys with defaults
+                    default_config = self._get_default_config()
+                    for key, default_value in default_config.items():
+                        if key not in config:
+                            config[key] = default_value
+                        elif key == "dspy_config" and not isinstance(config[key], dict):
+                            config[key] = default_value
+
+                    return config
+            else:
+                print(
+                    f"Warning: {self.config_path} not found. Using default configuration."
+                )
+                return self._get_default_config()
+
+        except json.JSONDecodeError as e:
+            print(
+                f"Warning: JSON decode error in {self.config_path}: {e}. Using default configuration."
+            )
+            return self._get_default_config()
+        except Exception as e:
+            print(
+                f"Warning: Error loading config from {self.config_path}: {e}. Using default configuration."
+            )
+            return self._get_default_config()
+
+    def _get_default_config(self) -> Dict:
+        """Get default configuration"""
+        return {
+            "test_cases": {},
+            "dspy_config": {
+                "optimization_enabled": True,
+                "model": "openai/o3-mini-birthright",
+                "max_tokens": 20000,
+                "temperature": 1.0,
+            },
+            "generation_config": {
+                "auto_generate_enabled": True,
+                "default_timeout": 30.0,
+            },
+        }
+
     def setup_dspy(self):
-        """Initialize DSPy with OpenAI o3-mini-birthright model"""
+        """Initialize DSPy with available language model"""
         dspy_print("Setting up DSPy optimizer...")
 
         try:
@@ -147,7 +238,7 @@ class DSPyFlightOptimizer:
                 error_print(f"Failed to import DSPy: {e}")
                 return
 
-            # Configure DSPy with o3-mini-birthright model
+            # Configure DSPy with available model
             lm_config = {
                 "model": "openai/o3-mini-birthright",
                 "api_key": openai_api_key,
@@ -158,8 +249,6 @@ class DSPyFlightOptimizer:
             if base_url:
                 lm_config["base_url"] = base_url
                 debug_print(f"Using custom base URL: {base_url}")
-
-            debug_print(f"Initializing DSPy with config: {lm_config}")
 
             # Initialize the language model
             lm = dspy.LM(**lm_config)
@@ -185,37 +274,34 @@ class DSPyFlightOptimizer:
             self.call_generator = None
 
     def optimize_prompt(self, context: OptimizationContext) -> str:
-        """Optimize a prompt using DSPy"""
+        """Optimize a prompt using DSPy approach"""
         if not self.optimizer:
             debug_print("DSPy optimizer not available, using fallback")
             return self._fallback_optimization(context)
 
         try:
-            # Get detailed tool description
-            tool_description = self._get_tool_description(context.tool_name)
-
-            # Prepare tool arguments string
-            tool_arguments = (
-                json.dumps(context.tool_arguments, indent=2)
-                if context.tool_arguments
-                else "No arguments provided"
+            # Prepare inputs for DSPy
+            tool_schema_str = self._format_tool_schema(context.tool_schema)
+            current_arguments_str = json.dumps(context.generated_arguments, indent=2)
+            failure_details_str = self._format_failure_details(context)
+            success_requirements_str = self._format_success_requirements(
+                context.success_criteria
             )
-
-            # Prepare failure info
-            failure_info = self._prepare_failure_info(context)
 
             dspy_print(f"Calling DSPy optimizer with:")
             debug_print(f"  Tool: {context.tool_name}")
-            debug_print(f"  Arguments: {tool_arguments}")
+            debug_print(f"  Schema: {tool_schema_str[:100]}...")
+            debug_print(f"  Arguments: {current_arguments_str}")
             debug_print(f"  Original prompt: '{context.original_prompt}'")
 
             # Use DSPy to optimize the prompt
             result = self.optimizer(
                 tool_name=context.tool_name,
-                tool_description=tool_description,
-                tool_arguments=tool_arguments,
-                failure_info=failure_info,
+                tool_schema=tool_schema_str,
+                current_arguments=current_arguments_str,
+                failure_details=failure_details_str,
                 original_prompt=context.original_prompt,
+                success_requirements=success_requirements_str,
             )
 
             optimized_prompt = result.optimized_prompt.strip()
@@ -232,185 +318,211 @@ class DSPyFlightOptimizer:
             error_print(f"DSPy optimization failed with error: {e}")
             return self._fallback_optimization(context)
 
-    def generate_tool_call(
-        self, tool_name: str, tool_description: str, user_intent: str
+    def generate_tool_instruction(
+        self,
+        tool_schema: Dict[str, Any],
+        user_intent: str,
+        available_context: Dict[str, Any] = None,
     ) -> str:
-        """Generate a tool call from user intent"""
+        """Generate a tool instruction from user intent"""
         if not self.call_generator:
-            return self._fallback_call_generation(tool_name, user_intent)
+            return self._fallback_instruction_generation(tool_schema, user_intent)
 
         try:
+            tool_schema_str = self._format_tool_schema(tool_schema)
+            context_str = json.dumps(available_context or {}, indent=2)
+
             result = self.call_generator(
-                tool_description=tool_description, user_intent=user_intent
+                tool_schema=tool_schema_str,
+                user_intent=user_intent,
+                available_context=context_str,
             )
-            return result.tool_call
+            return result.tool_instruction
         except Exception as e:
-            error_print(f"DSPy call generation failed: {e}")
-            return self._fallback_call_generation(tool_name, user_intent)
+            error_print(f"DSPy instruction generation failed: {e}")
+            return self._fallback_instruction_generation(tool_schema, user_intent)
 
-    def _get_tool_description(self, tool_name: str) -> str:
-        """Get detailed description of the tool for optimization context"""
-        tool_descriptions = {
-            "search_papers": """
-Tool Function: Searches academic papers on arXiv based on a topic query.
-Input Parameters: 
-- topic (string): The research topic or subject area to search for
-- max_results (int): Maximum number of papers to return (default: 5)
-Output Format: Returns a list of arXiv paper IDs (e.g., ["1909.03550v1", "2001.12345v2"])
-Usage Notes: The tool searches arXiv's database and saves paper metadata locally. It expects specific topic keywords and returns paper identifiers that can be used with extract_info tool.
-""",
-            "extract_info": """
-Tool Function: Extracts detailed information about a specific academic paper.
-Input Parameters:
-- paper_id (string): The arXiv paper ID to look up (e.g., "1909.03550v1")
-Output Format: Returns JSON or structured text with paper details including title, authors, summary, publication date, and PDF URL.
-Usage Notes: Searches local database of previously downloaded papers. If paper not found locally, returns a "no saved information" message. Requires exact paper ID format.
-""",
-            "read_file": """
-Tool Function: Reads and returns the contents of a specified file.
-Input Parameters:
-- path (string): File path to read (e.g., "server_config.json", "data.txt")
-Output Format: Returns the complete file contents as text.
-Usage Notes: Can read any accessible file. Common use cases include configuration files, data files, logs. Returns raw file content without modification.
-""",
-            "list_directory": """
-Tool Function: Lists all files and directories in a specified path.
-Input Parameters:
-- path (string): Directory path to list (e.g., ".", "/home/user", "data/")
-Output Format: Returns formatted list showing [FILE] or [DIR] prefix followed by item names.
-Usage Notes: Provides directory navigation and file discovery. Shows both files and subdirectories with clear type indicators.
-""",
-            "fetch": """
-Tool Function: Fetches content from a web URL and returns the data.
-Input Parameters:
-- url (string): The web URL to fetch content from (e.g., "https://example.com/api/data")
-Output Format: Returns the fetched content, often with content-type information and formatted display.
-Usage Notes: Can fetch web pages, API responses, JSON data. Handles various content types and provides appropriate formatting for display.
-""",
-        }
+    def _format_tool_schema(self, tool_schema: Dict[str, Any]) -> str:
+        """Format tool schema for DSPy input"""
+        if not tool_schema:
+            return "No schema available"
 
-        return tool_descriptions.get(
-            tool_name, f"Tool: {tool_name} - No detailed description available."
+        formatted = f"Tool Schema:\n"
+
+        # Add description if available
+        if "description" in tool_schema:
+            formatted += f"Description: {tool_schema['description']}\n"
+
+        # Add input parameters
+        properties = tool_schema.get("properties", {})
+        if properties:
+            formatted += f"Parameters:\n"
+            for param_name, param_info in properties.items():
+                param_type = param_info.get("type", "unknown")
+                param_desc = param_info.get("description", "No description")
+                formatted += f"  - {param_name} ({param_type}): {param_desc}\n"
+
+        # Add required parameters
+        required = tool_schema.get("required", [])
+        if required:
+            formatted += f"Required Parameters: {', '.join(required)}\n"
+
+        return formatted
+
+    def _format_failure_details(self, context: OptimizationContext) -> str:
+        """Format failure details for DSPy input"""
+        details = f"FAILURE ANALYSIS:\n"
+        details += f"Original Prompt: '{context.original_prompt}'\n"
+        details += f"Failure Reason: {context.failure_reason}\n"
+        details += (
+            f"Arguments Used: {json.dumps(context.generated_arguments, indent=2)}\n"
         )
 
-    def _prepare_failure_info(self, context: OptimizationContext) -> str:
-        """Prepare failure information for DSPy"""
-        failure_info = f"""
-FAILURE ANALYSIS:
-Original Prompt: "{context.original_prompt}"
-Failure Reason: {context.failure_reason}
-Tool Arguments Being Used: {json.dumps(context.tool_arguments, indent=2) if context.tool_arguments else "None"}
-
-PROBLEMS IDENTIFIED:
-1. The prompt is too vague and doesn't provide clear instructions
-2. The prompt doesn't specify what output format is expected
-3. The prompt doesn't give the tool enough context about what to do
-
-REQUIREMENTS FOR NEW PROMPT:
-- Must be completely different from the original
-- Must be specific and actionable
-- Must clearly state what the tool should do
-- Must specify expected output format
-- Must work with the provided tool arguments
-
-EXAMPLE OF GOOD PROMPTS:
-- For search_papers: "Search for academic papers about [topic]. Return exactly [number] arXiv paper IDs."
-- For extract_info: "Extract detailed information about paper with ID '[paper_id]'. Show title, authors, and summary."
-- For read_file: "Read the file '[filename]' and display its complete contents."
-"""
-
         if context.previous_attempts:
-            failure_info += f"\n\nPREVIOUS FAILED ATTEMPTS (DO NOT REPEAT):\n"
+            details += f"\nPREVIOUS FAILED ATTEMPTS (avoid these patterns):\n"
             for i, attempt in enumerate(context.previous_attempts[-3:], 1):
-                failure_info += f"{i}. '{attempt}'\n"
-            failure_info += "\nThe new prompt must be significantly different from all previous attempts."
+                details += f"{i}. '{attempt}'\n"
 
-        return failure_info.strip()
+        details += f"\nREQUIREMENTS FOR NEW PROMPT:\n"
+        details += (
+            f"- Must be completely different from original and previous attempts\n"
+        )
+        details += f"- Must be specific and actionable\n"
+        details += f"- Must work with the provided arguments\n"
+        details += f"- Must clearly state what the tool should accomplish\n"
+
+        return details
+
+    def _format_success_requirements(self, success_criteria: Dict[str, Any]) -> str:
+        """Format success criteria for DSPy input"""
+        if not success_criteria:
+            return "No specific success criteria defined"
+
+        requirements = "SUCCESS REQUIREMENTS:\n"
+
+        for criterion, value in success_criteria.items():
+            if criterion == "min_response_length":
+                requirements += f"- Response must be at least {value} characters long\n"
+            elif criterion == "no_error_keywords":
+                requirements += (
+                    f"- Response must not contain error keywords: {', '.join(value)}\n"
+                )
+            elif criterion == "expects_json":
+                requirements += f"- Response should contain valid JSON data\n"
+            elif criterion == "expects_list":
+                requirements += f"- Response should contain a list or array\n"
+            elif criterion == "expects_results":
+                requirements += f"- Response should contain search/query results\n"
+            elif criterion == "acceptable_not_found":
+                requirements += (
+                    f"- 'Not found' responses are acceptable if no data exists\n"
+                )
+            elif criterion == "expects_content":
+                requirements += (
+                    f"- Response should contain actual content from the tool\n"
+                )
+            else:
+                requirements += f"- {criterion}: {value}\n"
+
+        return requirements
 
     def _validate_optimized_prompt(
         self, optimized_prompt: str, context: OptimizationContext
     ) -> bool:
         """Validate that the optimized prompt is reasonable"""
         if not optimized_prompt or len(optimized_prompt.strip()) < 10:
+            debug_print("Optimized prompt too short")
             return False
 
         if optimized_prompt.strip() == context.original_prompt.strip():
+            debug_print("Optimized prompt identical to original")
             return False
 
+        # Check against previous attempts
         for prev_attempt in context.previous_attempts:
             if optimized_prompt.strip() == prev_attempt.strip():
+                debug_print("Optimized prompt matches previous attempt")
                 return False
 
-        if context.tool_name == "search_papers":
-            required_elements = ["search", "papers"]
-            if not any(elem in optimized_prompt.lower() for elem in required_elements):
-                return False
+        # Validation - ensure it mentions the tool or a relevant action
+        prompt_lower = optimized_prompt.lower()
+        tool_name_lower = context.tool_name.lower()
+
+        # Should reference the tool or a relevant action word
+        action_words = [
+            "test",
+            "use",
+            "call",
+            "execute",
+            "run",
+            "perform",
+            "demonstrate",
+        ]
+        if tool_name_lower not in prompt_lower and not any(
+            word in prompt_lower for word in action_words
+        ):
+            debug_print("Optimized prompt doesn't reference tool or action")
+            return False
 
         return True
 
     def _fallback_optimization(self, context: OptimizationContext) -> str:
-        """Fallback rule-based optimization when DSPy is not available"""
+        """Rule-based optimization fallback"""
         original = context.original_prompt
         tool_name = context.tool_name
 
-        # Handle extremely vague prompts by replacing them entirely
-        vague_indicators = ["stuff", "something", "show me", "find", "get"]
-        if (
-            any(indicator in original.lower() for indicator in vague_indicators)
-            and len(original.split()) <= 4
+        # Check if prompt is extremely vague
+        vague_indicators = ["test", "try", "use", "call", "run", "execute"]
+        words = original.lower().split()
+
+        if len(words) <= 4 and any(
+            indicator in words for indicator in vague_indicators
         ):
+            # Generate more specific prompt based on schema
+            tool_desc = context.tool_schema.get("description", f"the {tool_name} tool")
+            if context.generated_arguments:
+                arg_desc = ", ".join(
+                    f"{k}={v}" for k, v in context.generated_arguments.items()
+                )
+                return f"Use {tool_desc} with arguments: {arg_desc}. Execute the operation and return the results."
+            else:
+                return f"Execute {tool_desc} and return the results in the expected format."
 
-            specific_prompts = {
-                "search_papers": "Search for academic papers about machine learning. Return exactly 2 paper IDs from arXiv.",
-                "extract_info": "Extract detailed information about paper with ID 'test_paper_123'. Show the title, authors, summary, and publication details.",
-                "read_file": "Read the server_config.json file and display its complete contents.",
-                "list_directory": "List all files and directories in the current folder. Show the complete directory structure.",
-                "fetch": "Fetch content from https://example.com and display the returned content.",
-            }
+        # Add specificity based on success criteria
+        enhancements = []
+        criteria = context.success_criteria
 
-            if tool_name in specific_prompts:
-                return specific_prompts[tool_name]
+        if criteria.get("expects_json"):
+            enhancements.append("Return results in JSON format")
+        elif criteria.get("expects_list"):
+            enhancements.append("Return results as a list")
+        elif criteria.get("expects_content"):
+            enhancements.append("Return the actual content")
 
-        # For less vague prompts, apply targeted improvements
-        if "validation" in context.failure_reason.lower():
-            if tool_name == "search_papers":
-                return f"{original}. Search for academic papers and return a list of arXiv paper IDs."
-            elif tool_name == "extract_info":
-                return f"{original}. Extract paper information including title, authors, and summary. If no paper is found, clearly state that no information is available."
+        if criteria.get("min_response_length"):
+            enhancements.append("Provide detailed output")
 
-        # Add format specification based on expected format
-        format_additions = {
-            "list_of_ids": " Return the results as a list of paper IDs.",
-            "json_or_text": " Provide the information in a clear, structured format.",
-            "json_content": " Display the JSON content clearly.",
-            "directory_listing": " Show a formatted list of all files and directories.",
-            "web_content": " Return the fetched content in a readable format.",
-        }
+        # Combine original with enhancements
+        enhanced_prompt = original
+        if enhancements:
+            enhanced_prompt += ". " + ". ".join(enhancements) + "."
 
-        expected_format = context.expected_output_format
-        if expected_format in format_additions:
-            return original + format_additions[expected_format]
+        # If still the same, add improvement
+        if enhanced_prompt == original:
+            enhanced_prompt += f". Execute this operation using the {tool_name} tool and provide clear results."
 
-        return (
-            original
-            + f" Please provide a clear, specific response that meets the requirements for the {tool_name} tool."
-        )
+        return enhanced_prompt
 
-    def _fallback_call_generation(self, tool_name: str, user_intent: str) -> str:
-        """Fallback call generation when DSPy is not available"""
-        templates = {
-            "search_papers": f"Search for papers about {user_intent}. Return the paper IDs.",
-            "extract_info": f"Extract information about the paper related to {user_intent}.",
-            "read_file": f"Read the file that contains information about {user_intent}.",
-            "list_directory": f"List the directory contents to find files related to {user_intent}.",
-            "fetch": f"Fetch web content related to {user_intent}.",
-        }
+    def _fallback_instruction_generation(
+        self, tool_schema: Dict[str, Any], user_intent: str
+    ) -> str:
+        """Fallback for instruction generation"""
+        tool_name = tool_schema.get("name", "tool")
+        description = tool_schema.get("description", f"use the {tool_name}")
 
-        return templates.get(
-            tool_name, f"Use the {tool_name} tool to help with: {user_intent}"
-        )
+        return f"Use the {tool_name} to {user_intent}. {description}"
 
-    def test_dspy_connection(self):
+    def test_dspy_connection(self) -> bool:
         """Test if DSPy is properly configured and can make a call"""
         if not self.optimizer:
             warning_print("DSPy optimizer not initialized")
@@ -419,17 +531,30 @@ EXAMPLE OF GOOD PROMPTS:
         try:
             dspy_print("Testing DSPy connection...")
 
-            result = self.optimizer(
+            # Create a test schema
+            test_schema = {
+                "name": "test_tool",
+                "description": "A test tool for verification",
+                "properties": {
+                    "test_param": {"type": "string", "description": "A test parameter"}
+                },
+                "required": ["test_param"],
+            }
+
+            # Create test context
+            test_context = OptimizationContext(
                 tool_name="test_tool",
-                tool_description="A test tool for verification that returns simple responses",
-                tool_arguments='{"test_param": "test_value"}',
-                failure_info="This is a test to verify DSPy is working correctly",
-                original_prompt="test prompt that needs improvement",
+                tool_schema=test_schema,
+                original_prompt="test the tool",
+                failure_reason="Response validation failed - test",
+                generated_arguments={"test_param": "test_value"},
+                success_criteria={"min_response_length": 10},
+                previous_attempts=[],
             )
 
-            success_print(
-                f"DSPy test successful! Optimized prompt: '{result.optimized_prompt}'"
-            )
+            optimized = self.optimize_prompt(test_context)
+
+            success_print(f"DSPy test successful! Optimized: '{optimized}'")
             return True
 
         except Exception as e:
@@ -440,18 +565,29 @@ EXAMPLE OF GOOD PROMPTS:
             return False
 
 
-def test_dspy_optimizer():
+def test_optimizer():
     """Test the DSPy optimizer functionality"""
-    optimizer = DSPyFlightOptimizer()
+    optimizer = DSPyOptimizer()
+
+    # Test with a tool schema
+    test_schema = {
+        "name": "example_tool",
+        "description": "An example tool that processes data",
+        "properties": {
+            "input_data": {"type": "string", "description": "The data to process"},
+            "format": {"type": "string", "description": "Output format preference"},
+        },
+        "required": ["input_data"],
+    }
 
     context = OptimizationContext(
-        tool_name="search_papers",
-        original_prompt="Find papers about machine learning",
-        failure_reason="Response validation failed - no paper IDs found",
-        expected_output_format="list_of_ids",
-        success_criteria={"contains_arxiv_ids": True, "min_response_length": 5},
+        tool_name="example_tool",
+        tool_schema=test_schema,
+        original_prompt="use the tool",
+        failure_reason="Response too vague",
+        generated_arguments={"input_data": "test data", "format": "json"},
+        success_criteria={"expects_json": True, "min_response_length": 20},
         previous_attempts=[],
-        tool_arguments={"topic": "machine learning", "max_results": 2},
     )
 
     optimized = optimizer.optimize_prompt(context)
@@ -460,4 +596,4 @@ def test_dspy_optimizer():
 
 
 if __name__ == "__main__":
-    test_dspy_optimizer()
+    test_optimizer()

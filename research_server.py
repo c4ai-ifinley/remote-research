@@ -1,10 +1,12 @@
 import arxiv
 import json
 import os
+from pathlib import Path
 from typing import List
+from utils import atomic_write_json
 from mcp.server.fastmcp import FastMCP
 
-PAPER_DIR = "papers"
+PAPER_DIR = Path("papers")
 
 # Initialize FastMCP server
 mcp = FastMCP("research")
@@ -34,10 +36,10 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     papers = client.results(search)
 
     # Create directory for this topic
-    path = os.path.join(PAPER_DIR, topic.lower().replace(" ", "_"))
-    os.makedirs(path, exist_ok=True)
+    path = PAPER_DIR / topic.lower().replace(" ", "_")
+    path.mkdir(parents=True, exist_ok=True)
 
-    file_path = os.path.join(path, "papers_info.json")
+    file_path = path / "papers_info.json"
 
     # Try to load existing papers info
     try:
@@ -60,8 +62,8 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
         papers_info[paper.get_short_id()] = paper_info
 
     # Save updated papers_info to json file
-    with open(file_path, "w") as json_file:
-        json.dump(papers_info, json_file, indent=2)
+
+    atomic_write_json(papers_info, file_path)
 
     print(f"Results are saved in: {file_path}")
 
@@ -80,11 +82,10 @@ def extract_info(paper_id: str) -> str:
         JSON string with paper information if found, error message if not found
     """
 
-    for item in os.listdir(PAPER_DIR):
-        item_path = os.path.join(PAPER_DIR, item)
-        if os.path.isdir(item_path):
-            file_path = os.path.join(item_path, "papers_info.json")
-            if os.path.isfile(file_path):
+    for item_path in PAPER_DIR.iterdir():
+        if item_path.is_dir():
+            file_path = item_path / "papers_info.json"
+            if file_path.is_file():
                 try:
                     with open(file_path, "r") as json_file:
                         papers_info = json.load(json_file)
@@ -107,13 +108,12 @@ def get_available_folders() -> str:
     folders = []
 
     # Get all topic directories
-    if os.path.exists(PAPER_DIR):
-        for topic_dir in os.listdir(PAPER_DIR):
-            topic_path = os.path.join(PAPER_DIR, topic_dir)
-            if os.path.isdir(topic_path):
-                papers_file = os.path.join(topic_path, "papers_info.json")
-                if os.path.exists(papers_file):
-                    folders.append(topic_dir)
+    if PAPER_DIR.exists():
+        for topic_path in PAPER_DIR.iterdir():
+            if topic_path.is_dir():
+                papers_file = topic_path / "papers_info.json"
+                if papers_file.exists():
+                    folders.append(topic_path.name)
 
     # Create a simple markdown list
     content = "# Available Topics\n\n"
@@ -136,9 +136,9 @@ def get_topic_papers(topic: str) -> str:
         topic: The research topic to retrieve papers for
     """
     topic_dir = topic.lower().replace(" ", "_")
-    papers_file = os.path.join(PAPER_DIR, topic_dir, "papers_info.json")
+    papers_file = PAPER_DIR / topic_dir / "papers_info.json"
 
-    if not os.path.exists(papers_file):
+    if not papers_file.exists():
         return f"# No papers found for topic: {topic}\n\nTry searching for papers on this topic first."
 
     try:

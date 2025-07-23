@@ -1,58 +1,63 @@
-# MCP Research Chatbot
+# MCP Flight Checker
 
-An intelligent chatbot with Model Context Protocol (MCP) integration, featuring automated tool testing and DSPy-powered prompt optimization.
+A universal testing and validation system for Model Context Protocol (MCP) tools that automatically generates test cases from tool schemas and optimizes prompts using DSPy.
 
-## 🚀 Quick Setup
+## Overview
 
-### 1. Clone and Install Dependencies
-```bash
-git clone <your-repo>
-cd <your-repo>
-uv sync
-```
+The Flight Checker automatically tests MCP tools by analyzing their schemas to generate appropriate test cases, executing them safely, and optimizing failed tests through intelligent prompt engineering. It works with any MCP-compliant tools without requiring tool-specific configuration.
 
-### 2. Environment Configuration
-```bash
-# Copy the environment template
-cp .env.example .env
+## Features
 
-# Edit .env and add your API keys
-nano .env  # or your preferred editor
-```
+- **Universal Compatibility**: Works with any MCP tool using only schema information
+- **Automatic Test Generation**: Creates comprehensive test suites from MCP tool schemas
+- **Safe Parameter Handling**: Generates context-aware test values without affecting real data
+- **DSPy Optimization**: Improves failed test prompts using AI-powered optimization
+- **Interactive Testing**: Optional manual context resolution for complex scenarios
+- **MCP Sampling Support**: Demonstrates advanced MCP capabilities with AI-powered analysis
 
-Your `.env` file should look like:
-```bash
-ANTHROPIC_API_KEY=sk-your-actual-anthropic-key
-OPENAI_API_KEY=sk-your-actual-openai-key
-BASE_URL=https://ai-incubator-api.pnnl.gov
-```
+## Quick Start
 
-### 3. Run the Chatbot
-```bash
-uv run mcp_chatbot.py
-```
+1. Ensure your MCP servers are configured in `server_config.json`
+2. Run the chatbot: `python mcp_chatbot.py`
+3. The system will automatically generate and execute test cases for all connected tools
+4. Use `/flight-check` to run tests manually or `/flight-check-interactive` for guided testing
 
-## 🛠 Features
+## Architecture
 
-- **MCP Integration**: Connect to multiple tools (filesystem, research, fetch)
-- **Automated Flight Checks**: Test all tools before operation
-- **DSPy Optimization**: AI-powered prompt improvement when tests fail
-- **Self-Improving**: System learns from failures and optimizes prompts
+### Core Components
 
-## 🔧 Manual Commands
+- **TestGenerator**: Analyzes MCP schemas to create test cases (basic functionality, parameter validation, error handling)
+- **FlightChecker**: Executes tests against live MCP tools and validates responses
+- **DSPyOptimizer**: Uses schema-based prompt optimization for failed tests
+- **Safe Context Handling**: Generates appropriate test values for files, URLs, and IDs
 
-- `/flight-check [verbosity]` - Run diagnostics (quiet/minimal/normal/verbose/debug)
-- `/prompts` - List available prompts
-- `@folders` - See available research topics
-- `@topic` - Search papers in specific topic
+### Test Case Types
 
-## 📊 Flight Check System
+1. **Basic Functionality**: Tests core tool operation with generated parameters
+2. **Parameter Validation**: Validates tool parameter handling and requirements
+3. **Error Handling**: Tests tool behavior with edge cases and invalid inputs
 
-The system automatically tests all tools on startup with configurable verbosity:
-- **Quiet**: Only final summary
-- **Minimal**: Tool names and results (default)
-- **Normal**: Include test descriptions
-- **Verbose**: Show response previews
-- **Debug**: Full diagnostic output
+## Configuration
 
-Failed tests trigger automatic DSPy optimization using the o3-mini model for intelligent prompt improvement.
+The system automatically creates configuration files:
+
+- `test_cases.json`: Stores generated test cases and optimization history
+- `learned_tests.json`: Tracks successful test patterns for reuse
+
+## Safety Features
+
+- Never uses real files, credentials, or production data for testing
+- Generates clearly marked test values with timestamps
+- Validates all tool responses against schema-derived success criteria
+- Provides detailed context requirements for manual resolution when needed
+
+## MCP Sampling Demo
+
+Includes enhanced research server demonstrating MCP sampling capabilities:
+
+- `analyze_research_trends()`: AI-powered research landscape analysis
+- `compare_research_topics()`: Comparative analysis between research domains
+
+## Integration
+
+The Flight Checker integrates seamlessly with existing MCP chatbot systems, running automatically at startup and providing manual testing capabilities through chat commands.

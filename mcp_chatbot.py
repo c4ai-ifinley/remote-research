@@ -9,8 +9,8 @@ import nest_asyncio
 import os
 import traceback
 
-# Import the enhanced flight check system
-from enhanced_flight_check import EnhancedFlightChecker, VerbosityLevel
+# Import the flight check system
+from flight_checker import FlightChecker, VerbosityLevel
 
 # Import color utilities
 from color_utils import (
@@ -86,6 +86,7 @@ class MCP_ChatBot:
                                 "name": tool.name,
                                 "description": tool.description,
                                 "input_schema": tool.inputSchema,
+                                "annotations": tool.annotations,
                             }
                         )
                 else:
@@ -139,41 +140,47 @@ class MCP_ChatBot:
     async def connect_to_servers(self):
         try:
             # Check if server_config.json exists
-            config_file = (
-                "server_config.json"  # Change to "test_config.json" for testing
-            )
+            config_file = "server_config.json"
             if not os.path.exists(config_file):
                 print(f"No {config_file} found. Running without MCP servers.")
                 return
 
             with open(config_file, "r") as file:
-                data = json.load(file)
+                content = file.read().strip()
+                if not content:
+                    print(f"{config_file} is empty. Running without MCP servers.")
+                    return
+
+                data = json.loads(content)
+
             servers = data.get("mcpServers", {})
 
             if not servers:
                 print("No servers configured. Running without MCP servers.")
                 return
 
+            connected_count = 0
             for server_name, server_config in servers.items():
                 try:
                     await self.connect_to_server(server_name, server_config)
+                    connected_count += 1
                 except Exception as e:
                     print(f"Failed to connect to {server_name}, skipping: {e}")
                     continue
 
-            # Initialize enhanced flight checker after all connections are established
-            self.flight_checker = EnhancedFlightChecker(self)
+            if connected_count > 0:
+                print(f"Successfully connected to {connected_count} server(s)")
+                # Initialize flight checker after successful connections
+                self.flight_checker = FlightChecker(self)
+            else:
+                print("No servers connected successfully")
 
+        except json.JSONDecodeError as e:
+            print(f"Error parsing server config JSON: {e}")
+            print("Running without MCP servers...")
         except Exception as e:
             print(f"Error loading server config: {e}")
-            print("Continuing without MCP servers...")
-            # Don't raise the exception, continue without serversload(file)
-            servers = data.get("mcpServers", {})
-            for server_name, server_config in servers.items():
-                await self.connect_to_server(server_name, server_config)
-        except Exception as e:
-            print(f"Error loading server config: {e}")
-            raise
+            print("Running without MCP servers...")
 
     async def process_query(self, query):
         messages = [{"role": "user", "content": query}]
@@ -436,8 +443,33 @@ class MCP_ChatBot:
                                 args[key] = value
 
                         await self.execute_prompt(prompt_name, args)
+                    elif command == "/tools":
+                        print("\nAvailable tools:")
+                        for tool in self.available_tools:
+                            print(f"- {tool['name']}: {tool['description']}")
+                    elif command == "/test-cases":
+                        if self.flight_checker:
+                            print("\nGenerated test cases:")
+                            for (
+                                tool_name,
+                                test_list,
+                            ) in self.flight_checker.test_cases.items():
+                                print(f"\n{tool_name}:")
+                                for test_case in test_list:
+                                    print(
+                                        f"  - {test_case.test_name}: {test_case.description}"
+                                    )
+                                    if test_case.context_requirements:
+                                        print(
+                                            f"    Context needed: {', '.join(test_case.context_requirements)}"
+                                        )
+                        else:
+                            error_print("Flight checker not available")
                     else:
                         error_print(f"Unknown command: {command}")
+                        print(
+                            "Available commands: /prompts, /prompt, /tools, /test-cases, /flight-check"
+                        )
                     continue
 
                 await self.process_query(query)
@@ -446,6 +478,10 @@ class MCP_ChatBot:
                 error_print(f"Error: {str(e)}")
 
     async def cleanup(self):
+        # Clean up flight checker test files if they exist
+        if hasattr(self, "flight_checker") and self.flight_checker:
+            self.flight_checker.cleanup_test_files()
+
         await self.exit_stack.aclose()
 
 
