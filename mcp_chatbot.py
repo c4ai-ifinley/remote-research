@@ -204,37 +204,9 @@ class MCP_ChatBot:
                     has_tool_use = True
                     assistant_content.append(content)
 
-                    # Get session and call tool
-                    session = self.sessions.get(content.name)
-                    if not session:
-                        print(f"Tool '{content.name}' not found in sessions.")
-                        print(f"Available sessions: {list(self.sessions.keys())}")
-                        # Add a tool result indicating the tool wasn't found
-                        messages.append(
-                            {"role": "assistant", "content": assistant_content}
-                        )
-                        messages.append(
-                            {
-                                "role": "user",
-                                "content": [
-                                    {
-                                        "type": "tool_result",
-                                        "tool_use_id": content.id,
-                                        "content": f"Error: Tool '{content.name}' not available",
-                                        "is_error": True,
-                                    }
-                                ],
-                            }
-                        )
-                        continue
-
+                    # Use the new method that handles sampling oversight
                     try:
-                        print(
-                            f"Calling tool: {content.name} with args: {content.input}"
-                        )
-                        result = await session.call_tool(
-                            content.name, arguments=content.input
-                        )
+                        result = await self.call_tool_with_sampling_oversight(content)
                         messages.append(
                             {"role": "assistant", "content": assistant_content}
                         )
@@ -272,6 +244,142 @@ class MCP_ChatBot:
             # Exit loop if no tool was used
             if not has_tool_use:
                 break
+
+    async def call_tool_with_sampling_oversight(self, content):
+        """Call tool but intercept any sampling requests it makes"""
+        session = self.sessions.get(content.name)
+        if not session:
+            raise Exception(f"Tool '{content.name}' not found in sessions.")
+
+        # Store original create_message method if it exists
+        original_create_message = None
+        if hasattr(session, "create_message"):
+            original_create_message = session.create_message
+            # Replace with our oversight version
+            session.create_message = self.handle_sampling_with_oversight
+
+        try:
+            result = await session.call_tool(content.name, arguments=content.input)
+            return result
+        finally:
+            # Restore original create_message method
+            if original_create_message:
+                session.create_message = original_create_message
+
+    async def handle_sampling_with_oversight(self, **sampling_params):
+        """Handle MCP sampling requests with human oversight"""
+
+        print("\n" + "=" * 60)
+        print("AUTONOMOUS SYSTEM REQUESTING HUMAN GUIDANCE")
+        print("=" * 60)
+
+        # Extract the question the autonomous system is asking
+        messages = sampling_params.get("messages", [])
+        if not messages:
+            print("No messages in sampling request")
+            return self._create_rejection_response()
+
+        user_message = (
+            messages[0].content.text
+            if hasattr(messages[0].content, "text")
+            else str(messages[0].content)
+        )
+        system_prompt = sampling_params.get("systemPrompt", "")
+
+        if system_prompt:
+            print(
+                f"System context: {system_prompt[:100]}{'...' if len(system_prompt) > 100 else ''}"
+            )
+
+        print("\nAutonomous system is asking:")
+        print("-" * 40)
+        print(user_message)
+        print("-" * 40)
+
+        # Human oversight decision
+        while True:
+            print("\nWhat should I do?")
+            choice = (
+                input(
+                    "[approve] Send to LLM / [reject] Deny request / [modify] Change question: "
+                )
+                .lower()
+                .strip()
+            )
+
+            if choice == "approve":
+                print("Sending to LLM for guidance...")
+                break
+            elif choice == "reject":
+                print("Request denied by human supervisor")
+                return self._create_rejection_response()
+            elif choice == "modify":
+                new_question = input("Enter your modified question: ")
+                # Update the message content
+                if hasattr(messages[0].content, "text"):
+                    messages[0].content.text = new_question
+                print("Modified request approved")
+                break
+            else:
+                print("Please enter 'approve', 'reject', or 'modify'")
+
+        # Send approved request to LLM
+        anthropic_messages = []
+        for msg in messages:
+            content_text = (
+                msg.content.text if hasattr(msg.content, "text") else str(msg.content)
+            )
+            anthropic_messages.append({"role": msg.role, "content": content_text})
+
+        response = self.anthropic.messages.create(
+            model="claude-sonnet-4-20250514-v1-birthright",
+            messages=anthropic_messages,
+            system=sampling_params.get("systemPrompt"),
+            max_tokens=sampling_params.get("max_tokens", 200),
+            temperature=sampling_params.get("temperature", 0.7),
+        )
+
+        # Show human the LLM's response
+        llm_response = response.content[0].text
+        print(f"\nLLM Response:")
+        print("-" * 40)
+        print(llm_response)
+        print("-" * 40)
+
+        # Human can approve/modify the response
+        while True:
+            choice = (
+                input(
+                    "Send this response to autonomous system? [approve/modify/reject]: "
+                )
+                .lower()
+                .strip()
+            )
+
+            if choice == "approve":
+                print("Response approved and sent to autonomous system")
+                return self._create_mcp_style_response(llm_response)
+            elif choice == "modify":
+                modified_response = input("Enter your modified response: ")
+                print("Modified response sent to autonomous system")
+                return self._create_mcp_style_response(modified_response)
+            elif choice == "reject":
+                print("Response rejected - sending default response")
+                return self._create_rejection_response()
+            else:
+                print("Please enter 'approve', 'modify', or 'reject'")
+
+    def _create_mcp_style_response(self, content):
+        """Create a response in the format expected by MCP sampling"""
+        from mcp.types import TextContent
+
+        return type(
+            "MockResponse", (), {"content": TextContent(type="text", text=content)}
+        )()
+
+    def _create_rejection_response(self):
+        """Create a rejection response"""
+        return self._create_mcp_style_response("skip")
 
     async def get_resource(self, resource_uri):
         session = self.sessions.get(resource_uri)

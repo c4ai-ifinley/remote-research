@@ -4,8 +4,8 @@
       "test_name": "current_directory_listing",
       "description": "Test listing current directory contents",
       "prompt": "List all files and directories in the current folder. Show me what's available.",
-      "success_count": 13,
-      "last_success": "2025-07-18T11:08:04.468976",
+      "success_count": 23,
+      "last_success": "2025-07-28T13:56:13.261147",
       "optimization_history": []
     },
     {
@@ -28,8 +28,8 @@
       "generated_arguments": {
         "path": "test_file.txt"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.492061",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.285471",
       "optimization_history": []
     },
     {
@@ -50,8 +50,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.515653",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.305314",
       "optimization_history": []
     }
   ],
@@ -76,8 +76,8 @@
       "generated_arguments": {
         "path": "test_file.txt"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:03.661741",
+      "success_count": 36,
+      "last_success": "2025-07-28T13:56:12.680547",
       "optimization_history": []
     },
     {
@@ -98,8 +98,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:03.672459",
+      "success_count": 36,
+      "last_success": "2025-07-28T13:56:12.700135",
       "optimization_history": []
     },
     {
@@ -122,8 +122,8 @@
       "generated_arguments": {
         "path": "test_file.txt"
       },
-      "success_count": 9,
-      "last_success": "2025-07-18T11:08:03.697571",
+      "success_count": 29,
+      "last_success": "2025-07-28T13:56:12.720689",
       "optimization_history": [
         {
           "timestamp": "2025-07-17T20:23:21.379586",
@@ -161,8 +161,8 @@
           "test_item"
         ]
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:03.786103",
+      "success_count": 36,
+      "last_success": "2025-07-28T13:56:12.802960",
       "optimization_history": []
     },
     {
@@ -186,8 +186,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:03.804616",
+      "success_count": 35,
+      "last_success": "2025-07-28T13:56:12.825609",
       "optimization_history": []
     }
   ],
@@ -217,8 +217,8 @@
         "path": "test_file.txt",
         "content": "test_value"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:03.957228",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:12.931701",
       "optimization_history": []
     },
     {
@@ -246,8 +246,8 @@
         "path": "test_file.txt",
         "content": "test_value"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:03.969508",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:12.950225",
       "optimization_history": []
     },
     {
@@ -272,8 +272,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:03.991443",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:12.966478",
       "optimization_history": []
     }
   ],
@@ -327,8 +327,8 @@
         "edits": [],
         "dryRun": true
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.157838",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.062013",
       "optimization_history": []
     },
     {
@@ -380,8 +380,8 @@
         "edits": [],
         "dryRun": true
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.173323",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.084491",
       "optimization_history": []
     },
     {
@@ -429,8 +429,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.204731",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.101853",
       "optimization_history": []
     }
   ],
@@ -455,8 +455,8 @@
       "generated_arguments": {
         "path": "test_file.txt"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.340009",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.161746",
       "optimization_history": []
     },
     {
@@ -477,8 +477,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.353264",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.193252",
       "optimization_history": []
     }
   ],
@@ -503,8 +503,8 @@
       "generated_arguments": {
         "path": "test_file.txt"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.631255",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.375685",
       "optimization_history": []
     },
     {
@@ -525,8 +525,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.650673",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.396798",
       "optimization_history": []
     }
   ],
@@ -556,8 +556,8 @@
         "source": "test_value",
         "destination": "test_value"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.756719",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.460999",
       "optimization_history": []
     },
     {
@@ -582,8 +582,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.797531",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.480092",
       "optimization_history": []
     }
   ],
@@ -623,8 +623,8 @@
           "test_item"
         ]
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.924506",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.558865",
       "optimization_history": []
     },
     {
@@ -656,8 +656,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:04.935642",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.583387",
       "optimization_history": []
     }
   ],
@@ -682,8 +682,8 @@
       "generated_arguments": {
         "path": "test_file.txt"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:05.083826",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.704339",
       "optimization_history": []
     },
     {
@@ -706,8 +706,8 @@
       "generated_arguments": {
         "path": "test_file.txt"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:05.106998",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.730488",
       "optimization_history": []
     },
     {
@@ -728,8 +728,8 @@
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:05.127283",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.763763",
       "optimization_history": []
     }
   ],
@@ -744,8 +744,8 @@
         "required": []
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:05.222038",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.826086",
       "optimization_history": []
     },
     {
@@ -758,8 +758,8 @@
         "required": []
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:05.235853",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:13.847137",
       "optimization_history": []
     }
   ],
@@ -790,8 +790,8 @@
         "topic": "test query",
         "max_results": 5
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:06.093589",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:14.386551",
       "optimization_history": []
     },
     {
@@ -820,8 +820,8 @@
         "topic": "test query",
         "max_results": 5
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:06.228776",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:14.521861",
       "optimization_history": []
     },
     {
@@ -847,8 +847,8 @@
         "type": "object"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:06.252295",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:14.543102",
       "optimization_history": []
     }
   ],
@@ -873,8 +873,8 @@
       "generated_arguments": {
         "paper_id": "test_id_123"
       },
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:06.383390",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:14.647182",
       "optimization_history": []
     },
     {
@@ -895,8 +895,8 @@
         "type": "object"
       },
       "generated_arguments": {},
-      "success_count": 16,
-      "last_success": "2025-07-18T11:08:06.402290",
+      "success_count": 31,
+      "last_success": "2025-07-28T13:56:14.667768",
       "optimization_history": []
     }
   ],
@@ -949,8 +949,8 @@
         "start_index": 1,
         "raw": true
       },
-      "success_count": 14,
-      "last_success": "2025-07-18T11:08:37.968359",
+      "success_count": 27,
+      "last_success": "2025-07-28T13:55:18.856134",
       "optimization_history": []
     },
     {
@@ -996,8 +996,114 @@
         "type": "object"
       },
       "generated_arguments": {},
-      "success_count": 14,
-      "last_success": "2025-07-18T11:08:37.988290",
+      "success_count": 27,
+      "last_success": "2025-07-28T13:55:18.878855",
+      "optimization_history": []
+    }
+  ],
+  "collect_recent_papers": [
+    {
+      "test_name": "basic_functionality",
+      "description": "Basic functionality test for collect_recent_papers",
+      "prompt": "Test the collect_recent_papers tool with basic functionality",
+      "tool_schema": {
+        "properties": {
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 5,
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "min_year": {
+            "default": 2024,
+            "title": "Min Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "topic"
+        ],
+        "title": "collect_recent_papersArguments",
+        "type": "object"
+      },
+      "generated_arguments": {
+        "topic": "test query",
+        "max_results": 5,
+        "min_year": 1
+      },
+      "success_count": 7,
+      "last_success": "2025-07-28T13:55:14.504924",
+      "optimization_history": []
+    },
+    {
+      "test_name": "parameter_validation",
+      "description": "Parameter validation test for collect_recent_papers",
+      "prompt": "Test the collect_recent_papers tool with parameters: topic, max_results, min_year",
+      "tool_schema": {
+        "properties": {
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 5,
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "min_year": {
+            "default": 2024,
+            "title": "Min Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "topic"
+        ],
+        "title": "collect_recent_papersArguments",
+        "type": "object"
+      },
+      "generated_arguments": {
+        "topic": "test query",
+        "max_results": 5,
+        "min_year": 1
+      },
+      "success_count": 7,
+      "last_success": "2025-07-28T13:55:14.618698",
+      "optimization_history": []
+    },
+    {
+      "test_name": "error_handling",
+      "description": "Error handling test for collect_recent_papers",
+      "prompt": "Test error handling for collect_recent_papers tool",
+      "tool_schema": {
+        "properties": {
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 5,
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "min_year": {
+            "default": 2024,
+            "title": "Min Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "topic"
+        ],
+        "title": "collect_recent_papersArguments",
+        "type": "object"
+      },
+      "generated_arguments": {},
+      "success_count": 7,
+      "last_success": "2025-07-28T13:55:14.639685",
       "optimization_history": []
     }
   ]
