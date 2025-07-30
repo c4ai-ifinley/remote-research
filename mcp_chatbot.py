@@ -81,14 +81,14 @@ class MCP_ChatBot:
                     print(f"Found {len(response.tools)} tools for {server_name}")
                     for tool in response.tools:
                         self.sessions[tool.name] = session
-                        self.available_tools.append(
-                            {
-                                "name": tool.name,
-                                "description": tool.description,
-                                "input_schema": tool.inputSchema,
-                                "annotations": tool.annotations,
-                            }
-                        )
+                        # Clean tool schema for Anthropic API - remove annotations and other unsupported fields
+                        clean_tool = {
+                            "name": tool.name,
+                            "description": tool.description,
+                            "input_schema": tool.inputSchema,
+                        }
+                        # Remove any annotations or other fields that might cause issues
+                        self.available_tools.append(clean_tool)
                 else:
                     print(f"No tools found for {server_name}")
 
@@ -171,7 +171,12 @@ class MCP_ChatBot:
             if connected_count > 0:
                 print(f"Successfully connected to {connected_count} server(s)")
                 # Initialize flight checker after successful connections
-                self.flight_checker = FlightChecker(self)
+                # Use basic mode to avoid duplicates and focus on core functionality
+                self.flight_checker = FlightChecker(
+                    self,
+                    test_mode="basic",  # Only generate basic functionality tests
+                    load_learned_tests=False,  # Don't load learned tests to avoid duplicates
+                )
             else:
                 print("No servers connected successfully")
 

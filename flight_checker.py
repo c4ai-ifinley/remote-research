@@ -69,6 +69,7 @@ class TestCase:
     optimization_history: List[Dict] = field(default_factory=list)
     auto_generated: bool = True
     context_requirements: List[str] = field(default_factory=list)
+    test_type: str = "basic"  # 'basic', 'parameter', 'error', 'learned'
 
 
 @dataclass
@@ -105,7 +106,14 @@ class FlightCheckReport:
 class TestGenerator:
     """Automatically generates test cases from MCP tool schemas"""
 
-    def __init__(self):
+    def __init__(self, test_mode="comprehensive"):
+        """
+        Initialize test generator
+
+        Args:
+            test_mode: 'basic' (only basic functionality), 'comprehensive' (all test types)
+        """
+        self.test_mode = test_mode
         self.generation_strategies = {
             "basic_functionality": self._generate_basic_test,
             "parameter_validation": self._generate_parameter_test,
@@ -120,23 +128,30 @@ class TestGenerator:
 
         test_cases = []
 
-        # Generate basic functionality test
-        basic_test = self._generate_basic_test(tool_name, description, input_schema)
-        if basic_test:
-            test_cases.append(basic_test)
+        if self.test_mode == "basic":
+            # Only generate basic functionality test
+            basic_test = self._generate_basic_test(tool_name, description, input_schema)
+            if basic_test:
+                test_cases.append(basic_test)
+        else:
+            # Generate all test types (comprehensive mode)
+            # Generate basic functionality test
+            basic_test = self._generate_basic_test(tool_name, description, input_schema)
+            if basic_test:
+                test_cases.append(basic_test)
 
-        # Generate parameter-specific tests if schema has parameters
-        if input_schema.get("properties"):
-            param_test = self._generate_parameter_test(
-                tool_name, description, input_schema
-            )
-            if param_test:
-                test_cases.append(param_test)
+            # Generate parameter-specific tests if schema has parameters
+            if input_schema.get("properties"):
+                param_test = self._generate_parameter_test(
+                    tool_name, description, input_schema
+                )
+                if param_test:
+                    test_cases.append(param_test)
 
-        # Generate error handling test
-        error_test = self._generate_error_test(tool_name, description, input_schema)
-        if error_test:
-            test_cases.append(error_test)
+            # Generate error handling test
+            error_test = self._generate_error_test(tool_name, description, input_schema)
+            if error_test:
+                test_cases.append(error_test)
 
         return test_cases
 
@@ -166,6 +181,7 @@ class TestGenerator:
             success_criteria=success_criteria,
             context_requirements=context_reqs,
             auto_generated=True,
+            test_type="basic",
         )
 
     def _generate_parameter_test(
@@ -201,6 +217,7 @@ class TestGenerator:
             success_criteria=success_criteria,
             context_requirements=context_reqs,
             auto_generated=True,
+            test_type="parameter",
         )
 
     def _generate_error_test(
@@ -229,6 +246,7 @@ class TestGenerator:
             context_requirements=[],
             auto_generated=True,
             critical=False,  # Error tests are less critical
+            test_type="error",
         )
 
     def _generate_arguments_from_schema(
@@ -365,18 +383,33 @@ class TestGenerator:
 class FlightChecker:
     """Flight checker that works with any MCP tools"""
 
-    def __init__(self, chatbot_instance, config_path: str = "test_cases.json"):
+    def __init__(
+        self,
+        chatbot_instance,
+        config_path: str = "test_cases.json",
+        test_mode: str = "basic",  # 'basic' or 'comprehensive'
+        load_learned_tests: bool = False,
+    ):
         self.chatbot = chatbot_instance
         self.config_path = config_path
+        self.test_mode = test_mode
+        self.load_learned_tests = load_learned_tests
         self.verbosity = VerbosityLevel.MINIMAL
-        self.test_generator = TestGenerator()
+        self.test_generator = TestGenerator(test_mode=test_mode)
         self.optimizer = DSPyOptimizer(config_path)
         self.test_cases: Dict[str, List[TestCase]] = {}
         self.learned_tests_path = "learned_tests.json"
         self.created_test_files: List[str] = []  # Track files we create for cleanup
 
+        # Import and initialize human review system
+        from human_review_system import HumanReviewSystem
+
+        self.human_review = HumanReviewSystem()
+
         system_print("Initializing Flight Checker...")
         debug_print(f"Config path: {self.config_path}")
+        debug_print(f"Test mode: {self.test_mode}")
+        debug_print(f"Load learned tests: {self.load_learned_tests}")
         debug_print(f"Available tools: {len(self.chatbot.available_tools)}")
 
         # Test DSPy connection
@@ -390,7 +423,9 @@ class FlightChecker:
         try:
             self.load_existing_test_cases()
             self.auto_generate_test_cases()
-            self.load_learned_tests()
+
+            if self.load_learned_tests:
+                self.load_learned_tests_file()
 
             total_tests = sum(len(tests) for tests in self.test_cases.values())
             success_print(
@@ -455,6 +490,7 @@ class FlightChecker:
                             context_requirements=test_config.get(
                                 "context_requirements", []
                             ),
+                            test_type=test_config.get("test_type", "basic"),
                         )
                         self.test_cases[tool_name].append(test_case)
                     except Exception as e:
@@ -486,10 +522,13 @@ class FlightChecker:
                 debug_print("Tool missing name, skipping")
                 continue
 
-            # Skip if we already have test cases for this tool
-            if tool_name in self.test_cases and self.test_cases[tool_name]:
+            # Check if we already have test cases for this tool
+            existing_tests = self.test_cases.get(tool_name, [])
+
+            # Skip if we already have auto-generated tests for this tool
+            if any(test.auto_generated for test in existing_tests):
                 debug_print(
-                    f"Test cases already exist for {tool_name}, skipping auto-generation"
+                    f"Auto-generated test cases already exist for {tool_name}, skipping"
                 )
                 continue
 
@@ -500,7 +539,11 @@ class FlightChecker:
                 generated_tests = self.test_generator.generate_test_cases(tool)
 
                 if generated_tests:
-                    self.test_cases[tool_name] = generated_tests
+                    # Add to existing tests or create new list
+                    if tool_name not in self.test_cases:
+                        self.test_cases[tool_name] = []
+
+                    self.test_cases[tool_name].extend(generated_tests)
                     generated_count += len(generated_tests)
                     debug_print(
                         f"Generated {len(generated_tests)} test cases for {tool_name}"
@@ -557,6 +600,7 @@ class FlightChecker:
                         "optimization_history": test_case.optimization_history,
                         "auto_generated": test_case.auto_generated,
                         "context_requirements": test_case.context_requirements,
+                        "test_type": test_case.test_type,
                     }
                     config["test_cases"][tool_name].append(test_config)
 
@@ -568,31 +612,50 @@ class FlightChecker:
         except Exception as e:
             error_print(f"Error saving test cases: {e}")
 
-    def load_learned_tests(self):
+    def load_learned_tests_file(self):
         """Load additional tests that succeeded previously"""
+        if not self.load_learned_tests:
+            return
+
         path = Path(self.learned_tests_path)
         if not path.exists():
+            debug_print(f"No learned tests file found at {self.learned_tests_path}")
             return
 
         try:
             with open(path, "r") as f:
                 data = json.load(f)
-        except Exception:
+        except Exception as e:
+            warning_print(f"Error loading learned tests: {e}")
             return
 
+        loaded_count = 0
         for tool_name, tests in data.items():
             for t in tests:
+                # Check if we already have this test
+                existing_tests = self.test_cases.get(tool_name, [])
+                test_name = t.get("test_name", "learned")
+
+                # Skip if we already have a test with the same name
+                if any(test.test_name == test_name for test in existing_tests):
+                    continue
+
                 case = TestCase(
                     tool_name=tool_name,
-                    test_name=t.get("test_name", "learned"),
+                    test_name=test_name,
                     description=t.get("description", "learned test"),
                     prompt=t.get("prompt", ""),
                     tool_schema=t.get("tool_schema", {}),
                     generated_arguments=t.get("generated_arguments", {}),
                     optimization_history=t.get("optimization_history", []),
                     auto_generated=False,
+                    test_type="learned",
                 )
                 self.test_cases.setdefault(tool_name, []).append(case)
+                loaded_count += 1
+
+        if loaded_count > 0:
+            success_print(f"Loaded {loaded_count} learned test cases")
 
     async def run_single_test(self, test_case: TestCase) -> TestReport:
         """Execute a single test case"""
@@ -737,7 +800,6 @@ class FlightChecker:
 
     def _create_safe_test_file(self) -> str:
         """Create a safe temporary test file for testing"""
-        import tempfile
         import time
 
         # Create a temporary file with safe content
@@ -872,6 +934,13 @@ class FlightChecker:
         if verbosity is not None:
             self.verbosity = verbosity
 
+        # Apply any pending human fixes first
+        fixes_applied = self.human_review.apply_human_fixes(self)
+        if fixes_applied > 0:
+            success_print(
+                f"Applied {fixes_applied} human fixes - consider re-running tests"
+            )
+
         if self.verbosity.value >= VerbosityLevel.NORMAL.value:
             header_print("Starting Tool Flight Check")
             separator_print()
@@ -885,26 +954,39 @@ class FlightChecker:
             if self.verbosity.value >= VerbosityLevel.MINIMAL.value:
                 flight_check_print(f"\nTesting {tool_name}...")
 
+            # Group tests by type for better organization
+            test_groups = {}
             for test_case in test_list:
-                if self.verbosity.value >= VerbosityLevel.NORMAL.value:
-                    colored_print(
-                        f"  Running {test_case.test_name}: {test_case.description}",
-                        Colors.FLIGHT_CHECK,
-                    )
-                elif self.verbosity.value >= VerbosityLevel.MINIMAL.value:
-                    colored_print(
-                        f"  {test_case.test_name}...", Colors.FLIGHT_CHECK, end=" "
-                    )
+                test_type = getattr(test_case, "test_type", "basic")
+                if test_type not in test_groups:
+                    test_groups[test_type] = []
+                test_groups[test_type].append(test_case)
 
-                report = await self.run_single_test(test_case)
-                all_reports.append(report)
+            # Run tests in a logical order
+            for test_type in ["basic", "parameter", "error", "learned"]:
+                if test_type not in test_groups:
+                    continue
 
-                if report.result == TestResult.FAIL and test_case.critical:
-                    failed_tests.append((test_case, report))
-                elif report.result == TestResult.PASS:
-                    self._record_success(test_case)
+                for test_case in test_groups[test_type]:
+                    if self.verbosity.value >= VerbosityLevel.NORMAL.value:
+                        colored_print(
+                            f"  Running {test_case.test_name} ({test_case.test_type}): {test_case.description}",
+                            Colors.FLIGHT_CHECK,
+                        )
+                    elif self.verbosity.value >= VerbosityLevel.MINIMAL.value:
+                        colored_print(
+                            f"  {test_case.test_name}...", Colors.FLIGHT_CHECK, end=" "
+                        )
 
-                self._print_test_result(report)
+                    report = await self.run_single_test(test_case)
+                    all_reports.append(report)
+
+                    if report.result == TestResult.FAIL and test_case.critical:
+                        failed_tests.append((test_case, report))
+                    elif report.result == TestResult.PASS:
+                        self._record_success(test_case)
+
+                    self._print_test_result(report)
 
         # Attempt optimization for failed critical tests
         if failed_tests and self.optimizer.optimization_enabled:
@@ -916,6 +998,10 @@ class FlightChecker:
 
         # Print summary
         self._print_flight_summary(report)
+
+        # Save failed tests for human review if there are critical failures
+        if report.critical_failures > 0:
+            self.human_review.save_failed_tests_for_review(all_reports)
 
         # Clean up any test files we created
         self.cleanup_test_files()
@@ -1179,6 +1265,7 @@ class FlightChecker:
                 {
                     "tool_name": tr.test_case.tool_name,
                     "test_name": tr.test_case.test_name,
+                    "test_type": getattr(tr.test_case, "test_type", "basic"),
                     "description": tr.test_case.description,
                     "prompt_used": tr.test_case.prompt,
                     "tool_schema": tr.test_case.tool_schema,
