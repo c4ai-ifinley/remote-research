@@ -7,6 +7,8 @@ from datetime import datetime
 from utils import atomic_write_json
 from mcp.server.fastmcp import FastMCP, Context
 from mcp.types import SamplingMessage, TextContent
+from mcp.shared.context import RequestContext
+from mcp.types import CreateMessageRequestParams, CreateMessageResult
 
 PAPER_DIR = Path("papers")
 
@@ -101,12 +103,24 @@ def extract_info(paper_id: str) -> str:
 
 @mcp.tool()
 async def collect_recent_papers(
-    topic: str, max_results: int = 5, min_year: int = 2024, ctx: Context = None
+    topic: str = None, max_results: int = 5, ctx: Context = None
 ) -> str:
     """
-    Collect papers but ask human guidance for older papers.
-    Demonstrates MCP sampling for autonomous decision-making.
+    Collect papers with user-driven topic selection.
+    If no topic is provided, will ask the user to specify one or allow cancellation.
+    All papers found will be collected regardless of publication date.
+
+    Args:
+        topic: Research topic (optional - will prompt user if not provided)
+        max_results: Maximum number of results to retrieve (default: 5)
     """
+
+    # Handle missing topic through user sampling
+    if not topic:
+        topic = await _determine_research_topic(ctx)
+        if not topic:
+            return "mcp_research_server: Paper collection cancelled - no topic was provided."
+
     client = arxiv.Client()
     search = arxiv.Search(
         query=topic, max_results=max_results, sort_by=arxiv.SortCriterion.Relevance
@@ -115,53 +129,25 @@ async def collect_recent_papers(
 
     collection_log = []
     papers_collected = []
-    human_decisions = []
 
     collection_log.append(f"Searching for papers on: '{topic}'")
-    collection_log.append(f"Auto-including papers from {min_year} or later")
+    collection_log.append(f"Collecting all {max_results} most relevant papers")
 
+    # Collect all papers found in the search
     for paper in papers:
         paper_year = paper.published.year
         paper_id = paper.get_short_id()
 
-        if paper_year >= min_year:
-            papers_collected.append(
-                {
-                    "id": paper_id,
-                    "title": paper.title,
-                    "year": paper_year,
-                    "decision": "auto_included",
-                }
-            )
-            collection_log.append(f"Auto-included: {paper.title} ({paper_year})")
-        else:
-            collection_log.append(f"Found older paper: {paper.title} ({paper_year})")
-            should_include = await _ask_human_about_older_paper(
-                paper, min_year, topic, ctx
-            )
+        papers_collected.append(
+            {
+                "id": paper_id,
+                "title": paper.title,
+                "year": paper_year,
+            }
+        )
+        collection_log.append(f"Collected: {paper.title} ({paper_year})")
 
-            human_decisions.append(
-                {
-                    "paper_id": paper_id,
-                    "paper_title": paper.title,
-                    "paper_year": paper_year,
-                    "decision": should_include,
-                }
-            )
-
-            if should_include:
-                papers_collected.append(
-                    {
-                        "id": paper_id,
-                        "title": paper.title,
-                        "year": paper_year,
-                        "decision": "human_approved",
-                    }
-                )
-                collection_log.append(f"Human approved: {paper.title} ({paper_year})")
-            else:
-                collection_log.append(f"Human skipped: {paper.title} ({paper_year})")
-
+    # Save collected papers
     if papers_collected:
         path = PAPER_DIR / topic.lower().replace(" ", "_")
         path.mkdir(parents=True, exist_ok=True)
@@ -173,97 +159,249 @@ async def collect_recent_papers(
         except (FileNotFoundError, json.JSONDecodeError):
             papers_info = {}
 
+        # Add full paper information for collected papers
         for paper_data in papers_collected:
-            papers_info[paper_data["id"]] = {
-                "title": paper_data["title"],
-                "year": paper_data["year"],
-                "decision_method": paper_data["decision"],
-                "collection_date": str(datetime.now().date()),
-            }
+            # Find the full paper info from the search results
+            for paper in papers:
+                if paper.get_short_id() == paper_data["id"]:
+                    papers_info[paper_data["id"]] = {
+                        "title": paper.title,
+                        "authors": [author.name for author in paper.authors],
+                        "summary": paper.summary,
+                        "pdf_url": paper.pdf_url,
+                        "published": str(paper.published.date()),
+                        "year": paper_data["year"],
+                        "collection_date": str(datetime.now().date()),
+                    }
+                    break
 
         atomic_write_json(papers_info, file_path)
         collection_log.append(f"Saved {len(papers_collected)} papers to {file_path}")
 
-    recent_count = len(
-        [p for p in papers_collected if p["decision"] == "auto_included"]
-    )
-    human_approved_count = len(
-        [p for p in papers_collected if p["decision"] == "human_approved"]
-    )
-    human_rejected_count = len([d for d in human_decisions if not d["decision"]])
-
-    report = f"""# Recent Papers Collection Report
+    # Generate report
+    report = f"""# Papers Collection Report
 
 **Topic**: {topic}
-**Date Threshold**: {min_year} or later
-**Papers Found**: {max_results}
+**Papers Found**: {len(list(papers))}
 **Papers Collected**: {len(papers_collected)}
-
-## Collection Summary
-- Auto-included (recent): {recent_count} papers
-- Human-approved (older): {human_approved_count} papers  
-- Human-rejected (older): {human_rejected_count} papers
 
 ## Collection Process
 {chr(10).join(collection_log)}
 
-## Human Decisions
-{_format_human_decisions(human_decisions)}
+## Papers by Year
+{_format_papers_by_year(papers_collected)}
 """
 
     return report
 
 
-async def _ask_human_about_older_paper(
-    paper, min_year: int, topic: str, ctx: Context
-) -> bool:
-    """Ask human via MCP sampling whether to include an older paper."""
+@mcp.tool()
+async def collect_recent_papers_with_sampling(
+    max_results: int = 5, ctx: Context = None
+) -> str:
+    """
+    Demo tool that showcases MCP sampling functionality.
+    Always asks the user for a research topic through sampling interface.
+    """
+
     if not ctx:
-        print("No context available for sampling - defaulting to skip")
-        return False
+        raise Exception("No context available for sampling")
 
-    paper_year = paper.published.year
-    years_old = min_year - paper_year
+    # Use sampling to get topic from user - following the official pattern
+    prompt = """mcp_research_server: I need to collect recent research papers, but no specific topic was provided.
 
-    guidance_prompt = f"""I'm collecting recent papers on "{topic}" and found an older paper.
+mcp_research_server: Please specify which research topic you'd like me to search for papers on. Some popular options include:
+    • Machine Learning
+    • Climate Change  
+    • Quantum Computing
+    • Artificial Intelligence
+    • Biotechnology
+    • Renewable Energy
+    • Cybersecurity
+    • Space Exploration
 
-Paper: {paper.title}
-Published: {paper_year} ({years_old} years before my {min_year} threshold)
-Authors: {', '.join([author.name for author in paper.authors[:3]])}
-
-Should I include this older paper? Respond with "yes" or "no": """
+mcp_research_server: Please specify a research topic, or type "cancel" if you'd like to stop the process."""
 
     try:
         result = await ctx.session.create_message(
             messages=[
                 SamplingMessage(
                     role="user",
-                    content=TextContent(type="text", text=guidance_prompt),
+                    content=TextContent(type="text", text=prompt),
                 )
             ],
             max_tokens=100,
         )
 
         if result.content.type == "text":
-            response_text = result.content.text.lower().strip()
-            return response_text.startswith("yes")
-        return False
+            topic = result.content.text.strip()
+
+            # Handle cancellation with proper MCP error
+            if not topic or topic.lower() in ["cancel", "skip"]:
+                raise Exception(
+                    "USER_CANCELLED: User chose to cancel the sampling demo. No papers will be collected."
+                )
+
+            print(f"mcp_research_server: Using topic '{topic}' provided via sampling")
+        else:
+            raise Exception("Invalid response from sampling")
+
     except Exception as e:
-        print(f"Error requesting human guidance: {e}")
-        return False
+        # Re-raise any exception (including our cancellation) to MCP client
+        raise e
 
+    # Now collect papers with the sampled topic
+    client = arxiv.Client()
+    search = arxiv.Search(
+        query=topic, max_results=max_results, sort_by=arxiv.SortCriterion.Relevance
+    )
+    papers = client.results(search)
 
-def _format_human_decisions(decisions: List[Dict]) -> str:
-    """Format human decisions for the report"""
-    if not decisions:
-        return "No human decisions required."
+    papers_collected = []
+    collection_log = [f"SAMPLING SUCCESS: Topic '{topic}' selected by user"]
 
-    formatted = ""
-    for decision in decisions:
-        status = "INCLUDED" if decision["decision"] else "SKIPPED"
-        formatted += (
-            f"- {decision['paper_title']} ({decision['paper_year']}) - {status}\n"
+    for paper in papers:
+        paper_year = paper.published.year
+        paper_id = paper.get_short_id()
+
+        papers_collected.append(
+            {
+                "id": paper_id,
+                "title": paper.title,
+                "year": paper_year,
+            }
         )
+        collection_log.append(f"Collected: {paper.title} ({paper_year})")
+
+    # Save papers
+    if papers_collected:
+        path = PAPER_DIR / f"sampling_demo_{topic.lower().replace(' ', '_')}"
+        path.mkdir(parents=True, exist_ok=True)
+        file_path = path / "papers_info.json"
+
+        papers_info = {}
+        for paper_data in papers_collected:
+            for paper in papers:
+                if paper.get_short_id() == paper_data["id"]:
+                    papers_info[paper_data["id"]] = {
+                        "title": paper.title,
+                        "authors": [author.name for author in paper.authors],
+                        "summary": paper.summary,
+                        "pdf_url": paper.pdf_url,
+                        "published": str(paper.published.date()),
+                        "year": paper_data["year"],
+                        "collection_date": str(datetime.now().date()),
+                        "sampling_demo": True,
+                    }
+                    break
+
+        atomic_write_json(papers_info, file_path)
+        collection_log.append(f"Saved to {file_path}")
+
+    report = f"""# MCP Sampling Demo - SUCCESS!
+
+**DEBUG INFO**: Using topic '{topic}' provided via sampling
+**Topic Selected via Sampling**: {topic}
+**Papers Collected**: {len(papers_collected)}
+
+## Sampling Workflow Completed
+✓ Server requested user input through MCP sampling
+✓ User provided topic: "{topic}"  
+✓ Server collected {len(papers_collected)} papers
+
+## Collection Log
+{chr(10).join(collection_log)}
+
+## Papers by Year
+{_format_papers_by_year(papers_collected)}
+
+**Demo Complete**: MCP sampling successfully enabled human-AI collaboration!
+"""
+
+    return report
+
+
+async def _determine_research_topic(ctx: Context) -> str:
+    """
+    Determine research topic through user sampling.
+    Asks the user for a topic or allows them to cancel.
+    """
+    if not ctx:
+        # No context available - cannot proceed without user input
+        print("mcp_research_server: No context available for user interaction")
+        return None
+
+    try:
+        # Ask user for topic preference
+        user_topic = await _ask_user_for_topic(ctx)
+        if user_topic and user_topic.lower() not in ["skip", "cancel"]:
+            print(f"mcp_research_server: Using topic '{user_topic}' provided by user")
+            return user_topic
+        else:
+            # User chose to cancel
+            print("mcp_research_server: User cancelled topic selection")
+            return None
+
+    except Exception as e:
+        print(f"mcp_research_server: Error requesting topic from user: {e}")
+        return None
+
+
+async def _ask_user_for_topic(ctx: Context) -> str:
+    """Ask user to specify a research topic via sampling with clear server identification"""
+
+    topic_prompt = """mcp_research_server: I need to collect recent research papers, but no specific topic was provided.
+
+mcp_research_server: Please specify which research topic you'd like me to search for papers on. Some popular options include:
+    • Machine Learning
+    • Quantum Computing
+    • Biotechnology
+    • Renewable Energy
+    • Cybersecurity
+
+mcp_research_server: Please specify a research topic, or type "cancel" if you'd like to stop the process."""
+
+    try:
+        result = await ctx.session.create_message(
+            messages=[
+                SamplingMessage(
+                    role="user",
+                    content=TextContent(type="text", text=topic_prompt),
+                )
+            ],
+            max_tokens=100,
+        )
+
+        if result.content.type == "text":
+            response = result.content.text.strip()
+            return response if response else None
+
+    except Exception as e:
+        print(f"mcp_research_server: Error in topic sampling: {e}")
+        return None
+
+
+def _format_papers_by_year(papers_collected: List[Dict]) -> str:
+    """Format papers by publication year for the report"""
+    if not papers_collected:
+        return "No papers collected."
+
+    # Group papers by year
+    by_year = {}
+    for paper in papers_collected:
+        year = paper["year"]
+        if year not in by_year:
+            by_year[year] = []
+        by_year[year].append(paper["title"])
+
+    # Format the output
+    formatted = ""
+    for year in sorted(by_year.keys(), reverse=True):
+        papers_in_year = by_year[year]
+        formatted += f"**{year}**: {len(papers_in_year)} paper{'s' if len(papers_in_year) != 1 else ''}\n"
+        for title in papers_in_year:
+            formatted += f"  - {title}\n"
+        formatted += "\n"
 
     return formatted
 
@@ -360,6 +498,25 @@ Follow these instructions:
 4. Organize your findings in a clear, structured format with headings and bullet points for easy readability.
 
 Please present both detailed information about each paper and a high-level synthesis of the research landscape in {topic}."""
+
+
+@mcp.prompt()
+def demo_sampling_prompt(num_papers: int = 5) -> str:
+    """Demo prompt that showcases the MCP sampling functionality."""
+    return f"""Demonstrate MCP server sampling by collecting {num_papers} research papers using the sampling interface.
+
+Use the collect_recent_papers_with_sampling tool to trigger the sampling workflow:
+
+1. The tool will detect that no topic was provided
+2. The MCP server will use sampling to request a topic from you
+3. You can specify any research topic you're interested in
+4. The server will then collect {num_papers} relevant papers
+
+Execute: collect_recent_papers_with_sampling(max_results={num_papers})
+
+IMPORTANT: If the user cancels the sampling request (by typing "cancel"), do NOT try alternative approaches. Simply acknowledge that the sampling demo was cancelled and explain what would have happened if a topic was provided.
+
+This showcases how MCP servers can request human guidance when they need additional information to complete their tasks."""
 
 
 if __name__ == "__main__":
