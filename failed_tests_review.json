@@ -1,0 +1,115 @@
+{
+  "review_instructions": "=== HUMAN REVIEW INSTRUCTIONS ===\n\nThis file contains failed test cases that need human review. For each failed test:\n\n1. READ the failure_analysis and human_instructions\n2. UPDATE the \"suggested_prompt\" field with a better prompt\n3. CHANGE \"status\" from \"needs_review\" to \"fixed\" \n4. OPTIONALLY change status to \"skip\" if the test should be disabled\n\nAfter editing this file, run the flight checker again. It will automatically apply your fixes.\n\nTIPS:\n- Make prompts more general and less specific\n- Focus on tool capabilities rather than specific files/data\n- Ask tools to handle missing data gracefully\n- Use current directory \".\" for file operations\n- Request successful demonstrations rather than assuming success\n\nEXAMPLE EDIT:\nChange: \"status\": \"needs_review\"\nTo:     \"status\": \"fixed\"\n\nAnd fill in: \"suggested_prompt\": \"Your improved prompt here\"\n\nCOMMON FIXES:\n- File tools: \"Demonstrate file reading with current directory files\"\n- Network tools: \"Fetch content from https://httpbin.org/json\"\n- Search tools: \"Search for Python files in current directory\"  \n- Data tools: \"Extract available information or show not found message\"",
+  "failed_tests": [
+    {
+      "tool_name": "read_multiple_files",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "For every file path listed in the \"paths\" parameter, try to open the file and retrieve its entire content. If the file is successfully read, output a line in the format: \"file_path: file_content\". If the file cannot be read because it does not exist or is unreadable, output a single line exactly as \"Not found: [file_path]\". Ensure each result is on a new line.",
+      "suggested_prompt": "[Update this prompt manually]",
+      "failure_reason": "Error keywords found: ['error']",
+      "response_preview": "test_item: Error - ENOENT: no such file or directory, open 'C:\\Users\\finl072\\workspace\\remote-research\\test_item'",
+      "tool_description": "No description",
+      "status": "needs_review, change this to 'fixed' when manually updated",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "create_directory",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "Using the supplied path (\"test_file.txt\"), please determine if a directory already exists at that location. If a directory is found, return a confirmation message noting its presence. Otherwise, create a new directory at that path and return a detailed success message indicating that the directory has been created and is now ready for use.. Return the actual content. Provide detailed output.",
+      "suggested_prompt": "",
+      "failure_reason": "Error keywords found: ['error']",
+      "response_preview": "Error: EEXIST: file already exists, mkdir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_1755656698.txt'",
+      "tool_description": "No description",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "list_directory",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "Assess the file system entry at the path \"test_file.txt\". If the entry is a directory, list its immediate contents in a JSON array. Otherwise, return exactly \"Not found\".",
+      "suggested_prompt": "",
+      "failure_reason": "Error keywords found: ['error']",
+      "response_preview": "Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_1755656698.txt'",
+      "tool_description": "No description",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "directory_tree",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "Inspect the file entity at the provided \"path\". If this entity is a folder, perform a recursive traversal to accumulate the names of every file and subfolder within it, and return the results as a JSON array. If it is not a folder, return a JSON array with the single element \"Path is not a folder\".. Return results in JSON format. Provide detailed output.",
+      "suggested_prompt": "",
+      "failure_reason": "Error keywords found: ['error']",
+      "response_preview": "Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_1755656698.txt'",
+      "tool_description": "No description",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "move_file",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "Initiate a file relocation operation using the provided inputs: use the value from \"source\" as the file's current location and \"destination\" as its new location. After completing the move, output a confirmation message following this pattern: \"The file has been successfully relocated from [source] to [destination]\". Please include any additional details that verify the file has been properly moved.. Provide detailed output.",
+      "suggested_prompt": "",
+      "failure_reason": "Error keywords found: ['error']",
+      "response_preview": "Error: ENOENT: no such file or directory, rename 'C:\\Users\\finl072\\workspace\\remote-research\\test_value' -> 'C:\\Users\\finl072\\workspace\\remote-research\\test_value'",
+      "tool_description": "No description",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "search_files",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "Examine the document \"test_file.txt\" to find every text segment that includes the sequence \"test_value\". While scanning, if any segment contains the sequence \"test_item\", remove that segment from the results. Compile all remaining segments into an array. If no segments meet these criteria, return the string \"Not found\".",
+      "suggested_prompt": "",
+      "failure_reason": "Error keywords found: ['error']",
+      "response_preview": "Error: ENOTDIR: not a directory, scandir 'C:\\Users\\finl072\\workspace\\remote-research\\test_file_1755656698.txt'",
+      "tool_description": "No description",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "extract_info",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "Find the metadata for the research paper using the given paper_id \"test_id_123\". If the record is present in the database, return all metadata details in a complete JSON object. If there is no corresponding record, output a JSON object with the key \"msg\" and the value \"No research information available for provided paper_id\".",
+      "suggested_prompt": "",
+      "failure_reason": "Expected JSON content not found",
+      "response_preview": "There's no saved information related to paper test_id_123.",
+      "tool_description": "No description",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "fetch",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "For the URL \"https://example.com/test\", begin by retrieving raw HTML content in a 5-character block starting at the first position (start_index = 1). If this initial block results in fewer than 10 characters overall, proceed to retrieve further 5-character blocks by incrementing the start index appropriately, appending each block until the total length is at least 10 characters. Finally, scan through the complete text and remove any occurrences of the words \"error\", \"failed\", \"exception\", and \"invalid\" before returning the cleaned output.",
+      "suggested_prompt": "",
+      "failure_reason": "Error keywords found: ['failed']",
+      "response_preview": "Failed to fetch https://example.com/test - status code 404",
+      "tool_description": "Parameters for fetching a URL.",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    },
+    {
+      "tool_name": "collect_recent_papers_with_sampling",
+      "test_name": "basic_functionality",
+      "test_type": "basic",
+      "current_prompt": "Test the collect_recent_papers_with_sampling tool with basic functionality. Provide detailed output.. Provide detailed output.. Provide detailed output.",
+      "suggested_prompt": "",
+      "failure_reason": "Error keywords found: ['error']",
+      "response_preview": "Error executing tool collect_recent_papers_with_sampling: USER_CANCELLED: User chose to cancel the sampling demo. No papers will be collected.",
+      "tool_description": "No description",
+      "status": "needs_review",
+      "timestamp": "2025-08-19T21:26:19.320773"
+    }
+  ],
+  "created_at": "2025-08-19T21:26:19.320773",
+  "total_failures": 9
+}

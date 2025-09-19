@@ -309,19 +309,19 @@ class TestGenerator:
 
         if prop_type == "string":
             # Try to generate reasonable string values
-            if "file" in name_lower or "path" in name_lower:
-                # For file paths, use generic test values
-                return "test_file.txt", True
-            elif "url" in name_lower:
+            # if "file" in name_lower or "path" in name_lower:
+            #     # For file paths, use generic test values
+            #     return "test_file.txt", True
+            if "url" in name_lower:
                 return "https://example.com/test", True
-            elif "id" in name_lower:
-                return "test_id_123", True
-            elif "topic" in name_lower or "query" in name_lower:
-                return "test query", False
-            elif "name" in name_lower:
-                return "test_name", False
-            else:
-                return "test_value", needs_context
+            # elif "id" in name_lower:
+            #     return "test_id_123", True
+            # elif "topic" in name_lower or "query" in name_lower:
+            #     return "test query", False
+            # elif "name" in name_lower:
+            #     return "test_name", False
+            # else:
+            #     return "test_value", needs_context
 
         elif prop_type == "integer" or prop_type == "number":
             # Check for common numeric parameters

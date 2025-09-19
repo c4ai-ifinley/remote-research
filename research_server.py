@@ -211,14 +211,11 @@ async def collect_recent_papers_with_sampling(
     prompt = """mcp_research_server: I need to collect recent research papers, but no specific topic was provided.
 
 mcp_research_server: Please specify which research topic you'd like me to search for papers on. Some popular options include:
-    • Machine Learning
-    • Climate Change  
+    • Machine Learning 
     • Quantum Computing
     • Artificial Intelligence
     • Biotechnology
-    • Renewable Energy
     • Cybersecurity
-    • Space Exploration
 
 mcp_research_server: Please specify a research topic, or type "cancel" if you'd like to stop the process."""
 
