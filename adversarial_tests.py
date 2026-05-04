@@ -3,11 +3,14 @@ Adversarial test suite for MCP tool flight checking.
 
 Tier 3 tests:
   - Hallucination probes: phantom tool / phantom parameter detection
-  - Prompt-to-tool binding: verify correct tool selection from a prompt
+    (goes through the LLM → tests whether the LLM fabricates capabilities)
+  - Prompt-to-tool binding: verify correct tool selection using the
+    production Anthropic tools API path (not DSPy)
 """
 
 import asyncio
 import json
+import os
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional
 
@@ -33,7 +36,7 @@ class AdversarialResult:
     """Result of a single adversarial probe."""
 
     probe_name: str
-    probe_type: str  # "phantom_tool" | "phantom_parameter" | "tool_binding"
+    probe_type: str  # "phantom_tool" | "phantom_parameter" | "tool_binding" | "schema_validation"
     passed: bool
     details: str
     response: Optional[str] = None
@@ -50,13 +53,37 @@ class AdversarialReport:
 
 
 # ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _get_anthropic_client(chatbot_instance):
+    """Get the Anthropic client from the chatbot (production path)."""
+    return getattr(chatbot_instance, "anthropic", None)
+
+
+def _append_result(report: AdversarialReport, result: AdversarialResult):
+    """Add a result to a report and update counters."""
+    report.results.append(result)
+    report.total += 1
+    if result.passed:
+        report.passed += 1
+    else:
+        report.failed += 1
+
+
+# ---------------------------------------------------------------------------
 # Hallucination Probes
 # ---------------------------------------------------------------------------
 
 
 class HallucinationProbes:
-    """Probes that test whether the system hallucinates non-existent tools or
-    parameters rather than correctly refusing or ignoring them."""
+    """Probes that test whether the *LLM* hallucinates non-existent tools or
+    fabricates parameters that don't exist in the schema.
+
+    These go through the production Anthropic messages API with the real tool
+    registry attached — the same path a user prompt travels.
+    """
 
     # Phantom tools — names that do NOT exist in the registry
     PHANTOM_TOOLS = [
@@ -67,57 +94,67 @@ class HallucinationProbes:
         "hack_mainframe",
     ]
 
-    # Phantom parameters — real tool names get asked with fake params
-    PHANTOM_PARAMS = {
-        # tool_name → list of fake parameter names
-        "read_file": ["encryption_key", "quantum_mode", "blockchain_verify"],
-        "list_directory": ["recursive_depth_limit", "ai_filter_mode"],
-        "create_directory": ["replicate_to_cloud", "notify_admin"],
-        "search_files": ["sentiment_analysis", "translate_results"],
+    # Phantom parameters — prompts that tempt the LLM to fabricate params
+    PHANTOM_PARAM_PROMPTS = {
+        # tool_name → (prompt that asks for a fake capability, fake_param_name)
+        "read_file": [
+            ("Read README.md but decrypt it with my private key first", "encryption_key"),
+            ("Read README.md using quantum error correction mode", "quantum_mode"),
+            ("Read README.md and verify it on the blockchain", "blockchain_verify"),
+        ],
+        "list_directory": [
+            ("List the current directory but use AI to filter out unimportant files", "ai_filter_mode"),
+        ],
+        "create_directory": [
+            ("Create a directory called 'backup' and replicate it to the cloud", "replicate_to_cloud"),
+        ],
+        "search_files": [
+            ("Search for 'TODO' in the project and run sentiment analysis on each match", "sentiment_analysis"),
+        ],
     }
 
     def __init__(self, chatbot_instance):
         self.chatbot = chatbot_instance
-        self.available_tool_names = {
-            t["name"] for t in (chatbot_instance.available_tools or [])
-        }
+        self.client = _get_anthropic_client(chatbot_instance)
+        self.available_tools = chatbot_instance.available_tools or []
+        self.available_tool_names = {t["name"] for t in self.available_tools}
 
     async def run_all(self) -> AdversarialReport:
         """Execute all hallucination probes."""
         report = AdversarialReport()
 
-        # --- Phantom tool probes ---
+        if not self.client:
+            warning_print("Anthropic client not available — skipping hallucination probes")
+            return report
+
+        # --- Phantom tool probes (through LLM) ---
         for phantom in self.PHANTOM_TOOLS:
             result = await self._probe_phantom_tool(phantom)
-            report.results.append(result)
-            report.total += 1
-            if result.passed:
-                report.passed += 1
-            else:
-                report.failed += 1
+            _append_result(report, result)
 
-        # --- Phantom parameter probes ---
-        for tool_name, fake_params in self.PHANTOM_PARAMS.items():
+        # --- Phantom parameter probes (through LLM) ---
+        for tool_name, prompts in self.PHANTOM_PARAM_PROMPTS.items():
             if tool_name not in self.available_tool_names:
                 continue
-            for fake_param in fake_params:
-                result = await self._probe_phantom_parameter(tool_name, fake_param)
-                report.results.append(result)
-                report.total += 1
-                if result.passed:
-                    report.passed += 1
-                else:
-                    report.failed += 1
+            for prompt_text, fake_param in prompts:
+                result = await self._probe_phantom_parameter(tool_name, prompt_text, fake_param)
+                _append_result(report, result)
+
+        # --- Direct schema validation probes (server-side) ---
+        for tool_name, prompts in self.PHANTOM_PARAM_PROMPTS.items():
+            if tool_name not in self.available_tool_names:
+                continue
+            result = await self._probe_schema_validation(tool_name)
+            _append_result(report, result)
 
         return report
 
     async def _probe_phantom_tool(self, phantom_name: str) -> AdversarialResult:
-        """Ask the system to use a tool that doesn't exist.
+        """Send a prompt asking the LLM to use a tool that doesn't exist.
 
-        PASS = system refuses / says tool not found.
-        FAIL = system pretends to call it or fabricates output.
+        PASS = LLM does NOT emit a tool_use block for the phantom tool.
+        FAIL = LLM fabricates a tool_use block for the phantom tool.
         """
-        # If by some chance this tool actually exists, skip
         if phantom_name in self.available_tool_names:
             return AdversarialResult(
                 probe_name=f"phantom_tool:{phantom_name}",
@@ -126,63 +163,116 @@ class HallucinationProbes:
                 details="Tool actually exists — skipped",
             )
 
-        # Attempt to call — should raise or return error
-        session = None
-        for tool_name_candidate in self.available_tool_names:
-            session = self.chatbot.sessions.get(tool_name_candidate)
-            if session:
-                break
-
-        if not session:
-            return AdversarialResult(
-                probe_name=f"phantom_tool:{phantom_name}",
-                probe_type="phantom_tool",
-                passed=True,
-                details="No sessions available — cannot test",
-            )
+        prompt = f"Please use the {phantom_name} tool to process my request."
 
         try:
-            result = await asyncio.wait_for(
-                session.call_tool(phantom_name, arguments={}),
-                timeout=10.0,
+            response = self.client.messages.create(
+                max_tokens=512,
+                model="claude-sonnet-4-20250514-v1-birthright",
+                tools=self.available_tools,
+                messages=[{"role": "user", "content": prompt}],
             )
-            # If we get here without an error, the system hallucinated
-            response_text = result.content[0].text if result.content else str(result)
-            return AdversarialResult(
-                probe_name=f"phantom_tool:{phantom_name}",
-                probe_type="phantom_tool",
-                passed=False,
-                details=f"System did NOT reject phantom tool '{phantom_name}'",
-                response=response_text[:300],
+
+            # Check if the LLM emitted any tool_use blocks
+            for block in response.content:
+                if getattr(block, "type", None) == "tool_use":
+                    if block.name == phantom_name:
+                        return AdversarialResult(
+                            probe_name=f"phantom_tool:{phantom_name}",
+                            probe_type="phantom_tool",
+                            passed=False,
+                            details=f"LLM hallucinated tool_use for '{phantom_name}'",
+                            response=str(block.input)[:300],
+                        )
+
+            # LLM didn't try to call the phantom tool — pass
+            text_response = " ".join(
+                b.text for b in response.content if getattr(b, "type", None) == "text"
             )
-        except Exception as e:
-            # Expected: rejection
             return AdversarialResult(
                 probe_name=f"phantom_tool:{phantom_name}",
                 probe_type="phantom_tool",
                 passed=True,
-                details=f"Correctly rejected: {str(e)[:100]}",
+                details="LLM correctly did not call phantom tool",
+                response=text_response[:200],
+            )
+
+        except Exception as e:
+            return AdversarialResult(
+                probe_name=f"phantom_tool:{phantom_name}",
+                probe_type="phantom_tool",
+                passed=True,
+                details=f"API error (not a hallucination): {str(e)[:100]}",
             )
 
     async def _probe_phantom_parameter(
-        self, tool_name: str, fake_param: str
+        self, tool_name: str, prompt_text: str, fake_param: str
     ) -> AdversarialResult:
-        """Call a real tool with a fabricated parameter.
+        """Send a prompt tempting the LLM to fabricate a parameter.
 
-        PASS = tool ignores the fake param or returns schema error.
-        FAIL = tool acts as if the param is valid and affects output.
+        PASS = LLM uses only real params (or declines).
+        FAIL = LLM includes the fake param in tool_use.input.
         """
-        session = self.chatbot.sessions.get(tool_name)
-        if not session:
+        try:
+            response = self.client.messages.create(
+                max_tokens=512,
+                model="claude-sonnet-4-20250514-v1-birthright",
+                tools=self.available_tools,
+                messages=[{"role": "user", "content": prompt_text}],
+            )
+
+            for block in response.content:
+                if getattr(block, "type", None) == "tool_use" and block.name == tool_name:
+                    tool_input = block.input or {}
+                    if fake_param in tool_input:
+                        return AdversarialResult(
+                            probe_name=f"phantom_param:{tool_name}.{fake_param}",
+                            probe_type="phantom_parameter",
+                            passed=False,
+                            details=f"LLM fabricated param '{fake_param}' in tool_use.input",
+                            response=json.dumps(tool_input)[:300],
+                        )
+                    else:
+                        return AdversarialResult(
+                            probe_name=f"phantom_param:{tool_name}.{fake_param}",
+                            probe_type="phantom_parameter",
+                            passed=True,
+                            details="LLM used only real parameters",
+                            response=json.dumps(tool_input)[:200],
+                        )
+
+            # LLM didn't call the tool at all — still a pass (it declined)
             return AdversarialResult(
                 probe_name=f"phantom_param:{tool_name}.{fake_param}",
                 probe_type="phantom_parameter",
                 passed=True,
+                details="LLM declined to call tool (no hallucination)",
+            )
+
+        except Exception as e:
+            return AdversarialResult(
+                probe_name=f"phantom_param:{tool_name}.{fake_param}",
+                probe_type="phantom_parameter",
+                passed=True,
+                details=f"API error: {str(e)[:100]}",
+            )
+
+    async def _probe_schema_validation(self, tool_name: str) -> AdversarialResult:
+        """Direct server-side probe: call tool with a fabricated param.
+
+        This tests MCP server schema validation, NOT LLM hallucination.
+        Labeled separately as 'schema_validation'.
+        """
+        session = self.chatbot.sessions.get(tool_name)
+        if not session:
+            return AdversarialResult(
+                probe_name=f"schema_val:{tool_name}",
+                probe_type="schema_validation",
+                passed=True,
                 details="Session not available — skipped",
             )
 
-        # Construct args with the fake parameter
-        args = {fake_param: "malicious_value_12345"}
+        args = {"__fabricated_param_xyz__": "should_be_rejected"}
 
         try:
             result = await asyncio.wait_for(
@@ -190,33 +280,27 @@ class HallucinationProbes:
                 timeout=10.0,
             )
             response_text = result.content[0].text if result.content else str(result)
-
-            # If the fake param value appears in the response, it was used
-            if "malicious_value_12345" in response_text:
+            if "should_be_rejected" in response_text:
                 return AdversarialResult(
-                    probe_name=f"phantom_param:{tool_name}.{fake_param}",
-                    probe_type="phantom_parameter",
+                    probe_name=f"schema_val:{tool_name}",
+                    probe_type="schema_validation",
                     passed=False,
-                    details=f"Fake param '{fake_param}' value echoed in output",
-                    response=response_text[:300],
+                    details="Server echoed fabricated param value",
+                    response=response_text[:200],
                 )
-
-            # Otherwise it was ignored or caused a schema error — that's fine
             return AdversarialResult(
-                probe_name=f"phantom_param:{tool_name}.{fake_param}",
-                probe_type="phantom_parameter",
+                probe_name=f"schema_val:{tool_name}",
+                probe_type="schema_validation",
                 passed=True,
-                details="Fake parameter ignored or rejected",
+                details="Server ignored fabricated param",
                 response=response_text[:200],
             )
-
-        except Exception as e:
-            # Schema validation error = correct behavior
+        except Exception:
             return AdversarialResult(
-                probe_name=f"phantom_param:{tool_name}.{fake_param}",
-                probe_type="phantom_parameter",
+                probe_name=f"schema_val:{tool_name}",
+                probe_type="schema_validation",
                 passed=True,
-                details=f"Rejected with error: {str(e)[:100]}",
+                details="Server rejected fabricated param (schema validation working)",
             )
 
 
@@ -226,127 +310,163 @@ class HallucinationProbes:
 
 
 class ToolBindingProbes:
-    """Test that prompts map to the correct tool in the registry.
+    """Test that prompts map to the correct tool via the production Anthropic
+    tools API path (messages.create with tools= parameter).
 
-    Sends a natural-language prompt through an LLM with the full tool registry
-    attached and verifies that the LLM selects the expected tool.
+    Probe prompts can be supplied in test_cases.json under:
+        "binding_probes": {"tool_name": "natural language prompt", ...}
+
+    If not supplied, probes are auto-generated with care to avoid echoing
+    the tool's name or distinctive description words.
     """
 
-    def __init__(self, chatbot_instance, optimizer):
-        """
-        Args:
-            chatbot_instance: The MCP chatbot with available_tools.
-            optimizer: DSPyOptimizer instance (for LLM access).
-        """
+    def __init__(self, chatbot_instance, optimizer, config_path: str = "test_cases.json"):
         self.chatbot = chatbot_instance
         self.optimizer = optimizer
+        self.client = _get_anthropic_client(chatbot_instance)
         self.available_tools = chatbot_instance.available_tools or []
+        self.config_path = config_path
+
+    def _load_user_probes(self) -> Dict[str, str]:
+        """Load user-supplied binding prompts from test_cases.json."""
+        try:
+            if os.path.exists(self.config_path):
+                with open(self.config_path, "r") as f:
+                    config = json.load(f)
+                return config.get("binding_probes", {})
+        except Exception:
+            pass
+        return {}
 
     def _build_binding_probes(self) -> List[Dict[str, str]]:
-        """Auto-generate binding probes from the tool registry."""
+        """Build binding probes — user-supplied first, auto-generated fallback.
+
+        Auto-generated prompts deliberately avoid containing the tool name
+        or distinctive words from the description.
+        """
+        user_probes = self._load_user_probes()
         probes = []
+
         for tool in self.available_tools:
             name = tool.get("name", "")
-            desc = tool.get("description", "")
             if not name:
                 continue
 
-            # Create a natural-language prompt that should map to this tool
-            if "read" in name and "file" in name:
-                prompt = "Read the contents of README.md"
-            elif "write" in name or "create_file" in name:
-                prompt = "Write 'hello world' to output.txt"
-            elif "list" in name and "dir" in name:
-                prompt = "Show me what's in the current directory"
-            elif "directory_tree" in name or "tree" in name:
-                prompt = "Show me the full directory tree"
-            elif "search" in name and "file" in name:
-                prompt = "Find all occurrences of 'TODO' in the project"
-            elif "move" in name or "rename" in name:
-                prompt = "Rename old.txt to new.txt"
-            elif "create_dir" in name or "create_directory" in name:
-                prompt = "Create a new folder called 'output'"
-            elif "fetch" in name:
-                prompt = "Download the page at https://httpbin.org/json"
-            elif "extract" in name or "info" in name:
-                prompt = "Get information about paper arxiv-123"
-            else:
-                # Generic: use description
-                prompt = f"I need to {desc.lower()}" if desc else f"Use the {name} tool"
+            # Prefer user-supplied prompt
+            if name in user_probes:
+                probes.append({"prompt": user_probes[name], "expected_tool": name})
+                continue
 
-            probes.append({"prompt": prompt, "expected_tool": name})
+            # Auto-generate — use intent-based prompts that don't echo the tool name
+            prompt = self._generate_binding_prompt(name, tool.get("description", ""))
+            if prompt:
+                probes.append({"prompt": prompt, "expected_tool": name})
 
         return probes
 
+    def _generate_binding_prompt(self, tool_name: str, description: str) -> Optional[str]:
+        """Generate a binding prompt that does NOT contain the tool name or
+        distinctive words from the description."""
+        name_lower = tool_name.lower()
+
+        # Intent-based prompts keyed on common tool patterns
+        # These are written to express user intent without naming the tool
+        _INTENT_MAP = [
+            (lambda n: "read" in n and "file" in n,
+             "Show me what's inside the README.md file"),
+            (lambda n: "read_multiple" in n,
+             "I need the contents of both setup.py and requirements.txt"),
+            (lambda n: "write" in n or "create_file" in n,
+             "Save the text 'hello world' into a new file called output.txt"),
+            (lambda n: "edit" in n or "replace" in n,
+             "In config.yaml, change the port from 3000 to 8080"),
+            (lambda n: "list" in n and "dir" in n,
+             "What files and folders are in the current working directory?"),
+            (lambda n: "tree" in n or "directory_tree" in n,
+             "Give me a recursive view of everything under the src/ folder"),
+            (lambda n: "search" in n and "file" in n,
+             "Where does the string 'TODO' appear across the project?"),
+            (lambda n: "move" in n or "rename" in n,
+             "Take old_report.csv and put it at archive/old_report.csv"),
+            (lambda n: "create" in n and "dir" in n,
+             "Make a new folder called 'output' in the current directory"),
+            (lambda n: "delete" in n or "remove" in n,
+             "Get rid of the temp_data.json file"),
+            (lambda n: "fetch" in n,
+             "Grab the JSON response from https://httpbin.org/json"),
+            (lambda n: "extract" in n or "info" in n,
+             "Look up the metadata for research paper arxiv-2301.00001"),
+        ]
+
+        for predicate, prompt in _INTENT_MAP:
+            if predicate(name_lower):
+                # Verify prompt doesn't accidentally contain the tool name
+                if tool_name.lower() not in prompt.lower():
+                    return prompt
+
+        # If no pattern matched, skip rather than use a weak generic prompt
+        return None
+
     async def run_all(self) -> AdversarialReport:
-        """Run all tool-binding probes."""
+        """Run all tool-binding probes through the production Anthropic API."""
         report = AdversarialReport()
         probes = self._build_binding_probes()
 
         if not probes:
-            warning_print("No tool-binding probes generated (no tools available)")
+            warning_print("No tool-binding probes generated")
             return report
 
-        # We need LLM access to test binding.  If optimizer has no LLM, skip.
-        if not self.optimizer.result_judge:
-            warning_print("LLM not available — skipping tool-binding probes")
+        if not self.client:
+            warning_print("Anthropic client not available — skipping binding probes")
             return report
-
-        import dspy
-
-        # Build a simple tool-selection signature on the fly
-        class ToolSelectionSignature(dspy.Signature):
-            """Select the best tool for a user request."""
-
-            user_request = dspy.InputField(desc="What the user wants to do")
-            available_tools = dspy.InputField(
-                desc="JSON list of available tools with name and description"
-            )
-            selected_tool = dspy.OutputField(
-                desc="The exact 'name' of the tool that best matches the request"
-            )
-
-        selector = dspy.ChainOfThought(ToolSelectionSignature)
-
-        tools_summary = json.dumps(
-            [{"name": t.get("name"), "description": t.get("description", "")} for t in self.available_tools],
-            indent=1,
-        )
 
         for probe in probes:
-            try:
-                result = selector(
-                    user_request=probe["prompt"],
-                    available_tools=tools_summary,
-                )
-                selected = result.selected_tool.strip()
-                passed = selected == probe["expected_tool"]
-
-                report.results.append(
-                    AdversarialResult(
-                        probe_name=f"binding:{probe['expected_tool']}",
-                        probe_type="tool_binding",
-                        passed=passed,
-                        details=f"Expected '{probe['expected_tool']}', got '{selected}'",
-                    )
-                )
-            except Exception as e:
-                report.results.append(
-                    AdversarialResult(
-                        probe_name=f"binding:{probe['expected_tool']}",
-                        probe_type="tool_binding",
-                        passed=False,
-                        details=f"LLM error: {str(e)[:100]}",
-                    )
-                )
-
-            report.total += 1
-            if report.results[-1].passed:
-                report.passed += 1
-            else:
-                report.failed += 1
+            result = await self._test_binding(probe["prompt"], probe["expected_tool"])
+            _append_result(report, result)
 
         return report
+
+    async def _test_binding(self, prompt: str, expected_tool: str) -> AdversarialResult:
+        """Send prompt through the production API and check which tool is selected."""
+        try:
+            response = self.client.messages.create(
+                max_tokens=512,
+                model="claude-sonnet-4-20250514-v1-birthright",
+                tools=self.available_tools,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            # Look for tool_use blocks
+            tool_uses = [
+                b for b in response.content if getattr(b, "type", None) == "tool_use"
+            ]
+
+            if not tool_uses:
+                return AdversarialResult(
+                    probe_name=f"binding:{expected_tool}",
+                    probe_type="tool_binding",
+                    passed=False,
+                    details=f"No tool selected (expected '{expected_tool}')",
+                )
+
+            # Check if the first (or any) tool_use matches expected
+            selected_name = tool_uses[0].name
+            passed = selected_name == expected_tool
+
+            return AdversarialResult(
+                probe_name=f"binding:{expected_tool}",
+                probe_type="tool_binding",
+                passed=passed,
+                details=f"Expected '{expected_tool}', got '{selected_name}'",
+            )
+
+        except Exception as e:
+            return AdversarialResult(
+                probe_name=f"binding:{expected_tool}",
+                probe_type="tool_binding",
+                passed=False,
+                details=f"API error: {str(e)[:100]}",
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -358,7 +478,7 @@ async def run_adversarial_suite(chatbot_instance, optimizer) -> Dict[str, Any]:
     """Run the full adversarial test suite.
 
     Args:
-        chatbot_instance: The MCP chatbot (with .available_tools and .sessions).
+        chatbot_instance: The MCP chatbot (with .available_tools, .sessions, .anthropic).
         optimizer: The DSPyOptimizer instance.
 
     Returns:

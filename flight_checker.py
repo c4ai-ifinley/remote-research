@@ -423,13 +423,15 @@ class FlightChecker:
         self,
         chatbot_instance,
         config_path: str = "test_cases.json",
-        test_mode: str = "basic",  # 'basic' or 'comprehensive'
+        test_mode: str = "basic",  # 'basic', 'comprehensive', or 'adversarial'
         load_learned_tests: bool = False,
+        judge_all: bool = False,
     ):
         self.chatbot = chatbot_instance
         self.config_path = config_path
         self.test_mode = test_mode
         self.load_learned_tests = load_learned_tests
+        self.judge_all = judge_all
         self.verbosity = VerbosityLevel.MINIMAL
         self.test_generator = TestGenerator(test_mode=test_mode)
         self.optimizer = DSPyOptimizer(config_path)
@@ -730,8 +732,13 @@ class FlightChecker:
             )
 
             # --- LLM-as-judge escalation ---
-            # If keyword filter says FAIL but MCP call succeeded, ask the judge
-            if not validation_result["valid"] and mcp_call_succeeded:
+            # If keyword filter says FAIL but MCP call succeeded, ask the judge.
+            # In judge_all mode, invoke the judge on every test (catches false-passes).
+            should_judge = (
+                (not validation_result["valid"] and mcp_call_succeeded)
+                or self.judge_all
+            )
+            if should_judge and mcp_call_succeeded:
                 judge_result = self.optimizer.judge_tool_result(
                     user_prompt=test_case.prompt,
                     tool_name=test_case.tool_name,
@@ -739,12 +746,22 @@ class FlightChecker:
                     tool_response=response,
                 )
                 validation_result["judge"] = judge_result
-                if judge_result.get("pass") is True:
+                if judge_result.get("pass") is True and not validation_result["valid"]:
+                    # Judge overrides keyword-filter FAIL → PASS
                     validation_result["valid"] = True
                     validation_result["checks_performed"].append(
                         f"LLM judge override: {judge_result['rationale']}"
                     )
                     validation_result["reason"] = ""
+                elif judge_result.get("pass") is False and validation_result["valid"]:
+                    # Judge catches a false-pass (only in judge_all mode)
+                    validation_result["valid"] = False
+                    validation_result["reason"] = (
+                        f"LLM judge rejected: {judge_result['rationale']}"
+                    )
+                    validation_result["checks_performed"].append(
+                        f"LLM judge downgrade: {judge_result['rationale']}"
+                    )
 
             return TestReport(
                 test_case=test_case,
@@ -794,64 +811,13 @@ class FlightChecker:
         return issues
 
     def _find_available_files(self) -> List[str]:
-        """Find safe test files that could be used for testing"""
-        safe_test_files = []
-        try:
-            # Check current directory for safe test files only
-            current_dir = Path(".")
-            for file_path in current_dir.iterdir():
-                if file_path.is_file() and self._is_safe_test_file(file_path.name):
-                    safe_test_files.append(str(file_path))
-        except Exception:
-            pass
+        """Find safe test files that could be reused for testing.
 
-        return safe_test_files
+        Only returns files we previously created (test_file_*.txt pattern).
+        """
+        import glob
 
-    def _is_safe_test_file(self, filename: str) -> bool:
-        """Check if a file is safe to use for testing (won't break the system)"""
-        filename_lower = filename.lower()
-
-        # Never use critical system files
-        dangerous_files = [
-            # Python source files
-            ".py",
-            # Configuration files
-            ".json",
-            ".yaml",
-            ".yml",
-            ".toml",
-            ".ini",
-            ".conf",
-            # Environment files
-            ".env",
-            # Documentation
-            ".md",
-            ".rst",
-            ".txt",
-            # Database files
-            ".db",
-            ".sqlite",
-            ".sqlite3",
-            # Log files
-            ".log",
-            # Package files
-            "requirements.txt",
-            "pyproject.toml",
-            "setup.py",
-            "setup.cfg",
-            # Hidden files
-            ".",
-        ]
-
-        # Check if filename contains dangerous extensions or patterns
-        for dangerous in dangerous_files:
-            if dangerous in filename_lower:
-                return False
-
-        # Only allow explicitly safe test files
-        safe_patterns = ["test_file", "sample", "dummy", "example", "temp"]
-
-        return any(pattern in filename_lower for pattern in safe_patterns)
+        return glob.glob("test_file_*.txt")
 
     def _create_safe_test_file(self) -> str:
         """Create a safe temporary test file for testing"""
@@ -1151,6 +1117,15 @@ class FlightChecker:
         # Save failed tests for human review if there are critical failures
         if report.critical_failures > 0:
             self.human_review.save_failed_tests_for_review(all_reports)
+
+        # Run adversarial suite if mode includes it
+        if self.test_mode == "adversarial":
+            from adversarial_tests import run_adversarial_suite
+
+            adversarial_report = await run_adversarial_suite(
+                self.chatbot, self.optimizer
+            )
+            report.adversarial_results = adversarial_report
 
         # Clean up any test files we created
         self.cleanup_test_files()
