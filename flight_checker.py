@@ -162,7 +162,7 @@ class TestGenerator:
 
         # Generate arguments from schema
         generated_args, context_reqs = self._generate_arguments_from_schema(
-            input_schema
+            input_schema, tool_name=tool_name
         )
 
         # Create prompt
@@ -195,7 +195,7 @@ class TestGenerator:
 
         # Generate arguments with parameter focus
         generated_args, context_reqs = self._generate_arguments_from_schema(
-            input_schema, focus_on_params=True
+            input_schema, focus_on_params=True, tool_name=tool_name
         )
 
         param_names = list(properties.keys())
@@ -250,7 +250,7 @@ class TestGenerator:
         )
 
     def _generate_arguments_from_schema(
-        self, input_schema: Dict, focus_on_params: bool = False
+        self, input_schema: Dict, focus_on_params: bool = False, tool_name: str = ""
     ) -> tuple[Dict[str, Any], List[str]]:
         """Generate arguments from MCP schema and identify context requirements"""
 
@@ -265,7 +265,7 @@ class TestGenerator:
 
             # Try to generate a reasonable value
             value, needs_context = self._generate_value_for_property(
-                prop_name, prop_type, prop_description, prop_schema
+                prop_name, prop_type, prop_description, prop_schema, tool_name=tool_name
             )
 
             if needs_context:
@@ -282,12 +282,13 @@ class TestGenerator:
         return generated_args, context_requirements
 
     def _generate_value_for_property(
-        self, name: str, prop_type: str, description: str, schema: Dict
+        self, name: str, prop_type: str, description: str, schema: Dict, *, tool_name: str = ""
     ) -> tuple[Any, bool]:
-        """Generate a value for a property and indicate if context is needed"""
+        """Generate a value for a property, using tool_name to pick sensible defaults."""
 
         name_lower = name.lower()
         desc_lower = description.lower()
+        tool_lower = tool_name.lower()
 
         # Check if this requires external context
         context_indicators = [
@@ -308,27 +309,59 @@ class TestGenerator:
         )
 
         if prop_type == "string":
-            # Try to generate reasonable string values
-            # if "file" in name_lower or "path" in name_lower:
-            #     # For file paths, use generic test values
-            #     return "test_file.txt", True
+            # --- Path/file arguments: choose based on tool purpose ---
+            is_path_arg = any(
+                kw in name_lower for kw in ("path", "file", "dir", "folder", "source", "destination")
+            )
+
+            if is_path_arg:
+                # Tool works on directories → use "."
+                if any(kw in tool_lower for kw in ("directory", "folder", "tree", "list_dir", "list_directory")):
+                    return ".", True
+                # Tool creates directories → use a temp dir name
+                elif "create" in tool_lower and "dir" in tool_lower:
+                    import time as _t
+                    return f"test_dir_{int(_t.time())}", True
+                # Tool moves/renames → source gets an existing file, destination a new name
+                elif any(kw in tool_lower for kw in ("move", "rename", "copy")):
+                    if "source" in name_lower or "src" in name_lower:
+                        return "__NEEDS_EXISTING_FILE__", True
+                    else:
+                        import time as _t
+                        return f"test_dest_{int(_t.time())}.txt", True
+                # Tool reads/writes/searches files → needs an existing file
+                elif any(kw in tool_lower for kw in ("read", "write", "edit", "search", "file", "get_file")):
+                    return "__NEEDS_EXISTING_FILE__", True
+                # Fallback for generic path params
+                else:
+                    return ".", True
+
+            # URL arguments
             if "url" in name_lower:
-                return "https://example.com/test", True
-            # elif "id" in name_lower:
-            #     return "test_id_123", True
-            # elif "topic" in name_lower or "query" in name_lower:
-            #     return "test query", False
-            # elif "name" in name_lower:
-            #     return "test_name", False
-            # else:
-            #     return "test_value", needs_context
+                return "https://httpbin.org/json", True
+
+            # ID arguments
+            if "id" in name_lower:
+                return "test_id_123", True
+
+            # Topic/query arguments
+            if "topic" in name_lower or "query" in name_lower or "search" in name_lower or "pattern" in name_lower:
+                return "test", False
+
+            # Name arguments
+            if "name" in name_lower:
+                return "test_name", False
+
+            # Generic string fallback
+            return "test_value", needs_context
 
         elif prop_type == "integer" or prop_type == "number":
-            # Check for common numeric parameters
             if "max" in name_lower or "limit" in name_lower:
                 return 5, False
             elif "count" in name_lower:
                 return 3, False
+            elif "depth" in name_lower:
+                return 2, False
             else:
                 return 1, needs_context
 
@@ -338,6 +371,9 @@ class TestGenerator:
         elif prop_type == "array":
             items_schema = schema.get("items", {})
             if items_schema.get("type") == "string":
+                # For file-list tools (read_multiple_files etc.)
+                if any(kw in name_lower for kw in ("path", "file")):
+                    return ["__NEEDS_EXISTING_FILE__"], needs_context
                 return ["test_item"], needs_context
             else:
                 return [], needs_context
@@ -686,10 +722,29 @@ class FlightChecker:
 
         try:
             # Execute the test
-            response = await self._execute_test(test_case)
+            response, mcp_call_succeeded = await self._execute_test(test_case)
 
             # Validate the response
-            validation_result = self._validate_response(test_case, response)
+            validation_result = self._validate_response(
+                test_case, response, mcp_call_succeeded=mcp_call_succeeded
+            )
+
+            # --- LLM-as-judge escalation ---
+            # If keyword filter says FAIL but MCP call succeeded, ask the judge
+            if not validation_result["valid"] and mcp_call_succeeded:
+                judge_result = self.optimizer.judge_tool_result(
+                    user_prompt=test_case.prompt,
+                    tool_name=test_case.tool_name,
+                    arguments=test_case.generated_arguments,
+                    tool_response=response,
+                )
+                validation_result["judge"] = judge_result
+                if judge_result.get("pass") is True:
+                    validation_result["valid"] = True
+                    validation_result["checks_performed"].append(
+                        f"LLM judge override: {judge_result['rationale']}"
+                    )
+                    validation_result["reason"] = ""
 
             return TestReport(
                 test_case=test_case,
@@ -820,8 +875,12 @@ class FlightChecker:
             error_print(f"Failed to create safe test file: {e}")
             return "safe_test_file.txt"  # Fallback to safe name
 
-    async def _execute_test(self, test_case: TestCase) -> str:
-        """Execute a test case using the generated arguments"""
+    async def _execute_test(self, test_case: TestCase) -> tuple[str, bool]:
+        """Execute a test case using the generated arguments.
+
+        Returns:
+            (response_text, mcp_call_succeeded) tuple.
+        """
         session = self.chatbot.sessions.get(test_case.tool_name)
         if not session:
             raise Exception("Tool session not found")
@@ -832,40 +891,77 @@ class FlightChecker:
         # Apply context-aware argument improvements
         test_args = self._improve_arguments_with_context(test_case, test_args)
 
-        result = await asyncio.wait_for(
-            session.call_tool(test_case.tool_name, arguments=test_args),
-            timeout=test_case.timeout_seconds,
-        )
-
-        return result.content[0].text if result.content else str(result)
+        try:
+            result = await asyncio.wait_for(
+                session.call_tool(test_case.tool_name, arguments=test_args),
+                timeout=test_case.timeout_seconds,
+            )
+            response_text = result.content[0].text if result.content else str(result)
+            return response_text, True
+        except asyncio.TimeoutError:
+            raise  # re-raise so caller handles TIMEOUT
+        except Exception as e:
+            # MCP protocol-level failure (call_tool raised)
+            return str(e), False
 
     def _improve_arguments_with_context(
         self, test_case: TestCase, args: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Improve arguments using available context - SAFELY"""
+        """Improve arguments using available context - SAFELY.
+
+        Resolves __NEEDS_EXISTING_FILE__ sentinels and other path placeholders.
+        """
         improved_args = args.copy()
 
-        # For file-related parameters, use safe test files only
-        for arg_name, arg_value in args.items():
-            if isinstance(arg_value, str) and (
-                "file" in arg_name.lower() or "path" in arg_name.lower()
-            ):
-                # First try to find existing safe test files
-                safe_files = self._find_available_files()
-                if safe_files:
-                    # Use the first safe test file
-                    improved_args[arg_name] = safe_files[0]
-                    debug_print(f"Using safe test file for {arg_name}: {safe_files[0]}")
-                else:
-                    # Create a new safe test file
-                    safe_file = self._create_safe_test_file()
+        for arg_name, arg_value in list(args.items()):
+            # Handle list-type arguments (e.g. paths: ["__NEEDS_EXISTING_FILE__"])
+            if isinstance(arg_value, list):
+                new_list = []
+                for item in arg_value:
+                    if isinstance(item, str) and item == "__NEEDS_EXISTING_FILE__":
+                        safe_file = self._get_or_create_safe_file()
+                        new_list.append(safe_file)
+                    else:
+                        new_list.append(item)
+                improved_args[arg_name] = new_list
+                continue
+
+            if not isinstance(arg_value, str):
+                continue
+
+            # Resolve sentinel for existing file
+            if arg_value == "__NEEDS_EXISTING_FILE__":
+                safe_file = self._get_or_create_safe_file()
+                improved_args[arg_name] = safe_file
+                debug_print(f"Resolved {arg_name} → '{safe_file}'")
+                continue
+
+            # Legacy: any remaining file/path string args that look like placeholders
+            if "file" in arg_name.lower() or "path" in arg_name.lower():
+                if arg_value in ("test_file.txt", "test_value"):
+                    safe_file = self._get_or_create_safe_file()
                     improved_args[arg_name] = safe_file
-                    debug_print(f"Created safe test file for {arg_name}: {safe_file}")
+                    debug_print(f"Using safe test file for {arg_name}: {safe_file}")
 
         return improved_args
 
-    def _validate_response(self, test_case: TestCase, response: str) -> Dict[str, Any]:
-        """Response validation based on success criteria"""
+    def _get_or_create_safe_file(self) -> str:
+        """Return an existing safe test file path, or create one."""
+        safe_files = self._find_available_files()
+        if safe_files:
+            return safe_files[0]
+        return self._create_safe_test_file()
+
+    def _validate_response(
+        self, test_case: TestCase, response: str, *, mcp_call_succeeded: bool = True
+    ) -> Dict[str, Any]:
+        """Outcome-aware response validation.
+
+        The key insight: if call_tool returned without raising, the MCP layer
+        succeeded.  Errors in the *response text* (e.g. EEXIST, ENOENT) are
+        semantic — they may or may not mean the test failed depending on whether
+        the tool achieved its purpose.
+        """
         validation_details = {
             "valid": False,
             "reason": "",
@@ -874,7 +970,12 @@ class FlightChecker:
 
         criteria = test_case.success_criteria
 
-        # Check minimum response length
+        # ---------- 0. Protocol-level failure (MCP call itself raised) ----------
+        if not mcp_call_succeeded:
+            validation_details["reason"] = "MCP protocol-level call failure"
+            return validation_details
+
+        # ---------- 1. Minimum response length ----------
         min_length = criteria.get("min_response_length", 10)
         if len(response) >= min_length:
             validation_details["checks_performed"].append(
@@ -886,18 +987,31 @@ class FlightChecker:
             )
             return validation_details
 
-        # Check for error keywords
-        error_keywords = criteria.get("no_error_keywords", [])
+        # ---------- 2. Outcome-aware error analysis ----------
         response_lower = response.lower()
+
+        # Signals that the tool *achieved its goal* despite containing "error"
+        # text — e.g. "Error: EEXIST: file already exists" means create_directory
+        # found the directory already present, which is success for a create op.
+        _SUCCESS_DESPITE_ERROR = [
+            ("eexist", ["create", "mkdir", "directory"]),   # already exists → created/present
+            ("already exists", ["create", "mkdir", "write", "directory"]),
+            ("enotempty", ["delete", "remove"]),             # dir not empty → it exists
+        ]
+
+        error_keywords = criteria.get("no_error_keywords", [])
         found_errors = [kw for kw in error_keywords if kw.lower() in response_lower]
+
         if found_errors:
-            # Check if "not found" responses are acceptable
+            # --- Check acceptable "not found" responses ---
             if criteria.get("acceptable_not_found", False):
                 not_found_phrases = [
                     "no saved information",
                     "not found",
                     "no information",
                     "does not exist",
+                    "no results",
+                    "no data",
                 ]
                 if any(phrase in response_lower for phrase in not_found_phrases):
                     validation_details["valid"] = True
@@ -906,15 +1020,50 @@ class FlightChecker:
                     )
                     return validation_details
 
+            # --- Outcome-aware: did the tool achieve what was asked? ---
+            tool_name_lower = test_case.tool_name.lower()
+            for error_signal, tool_affinity_words in _SUCCESS_DESPITE_ERROR:
+                if error_signal in response_lower:
+                    if any(w in tool_name_lower for w in tool_affinity_words):
+                        validation_details["valid"] = True
+                        validation_details["checks_performed"].append(
+                            f"Outcome-aware pass: '{error_signal}' is success for {test_case.tool_name}"
+                        )
+                        return validation_details
+
+            # --- Check if the response also contains expected content ---
+            # If the response has substantive output alongside the error text,
+            # the tool likely worked and the error is informational.
+            expected_indicators = test_case.expected_indicators or []
+            if expected_indicators:
+                indicators_found = [
+                    ind for ind in expected_indicators if ind.lower() in response_lower
+                ]
+                if indicators_found:
+                    validation_details["valid"] = True
+                    validation_details["checks_performed"].append(
+                        f"Expected indicators present despite error keywords: {indicators_found}"
+                    )
+                    return validation_details
+
+            # --- If error_handling test type, errors are expected ---
+            if test_case.test_type == "error":
+                validation_details["valid"] = True
+                validation_details["checks_performed"].append(
+                    "Error test: error keywords expected"
+                )
+                return validation_details
+
+            # Genuine failure — error keywords with no mitigating factors
             validation_details["reason"] = f"Error keywords found: {found_errors}"
             return validation_details
 
-        # Check JSON expectation
+        # ---------- 3. Check JSON expectation ----------
         if criteria.get("expects_json", False):
             try:
                 json.loads(response)
                 validation_details["checks_performed"].append("Valid JSON detected")
-            except:
+            except Exception:
                 if "{" in response and "}" in response:
                     validation_details["checks_performed"].append(
                         "JSON-like structure detected"
@@ -923,7 +1072,7 @@ class FlightChecker:
                     validation_details["reason"] = "Expected JSON content not found"
                     return validation_details
 
-        # If we reach here, validation passed
+        # ---------- 4. All checks passed ----------
         validation_details["valid"] = True
         return validation_details
 
@@ -1009,16 +1158,38 @@ class FlightChecker:
         return report
 
     async def _optimize_failed_tests(self, failed_tests: List[tuple]):
-        """Optimize prompts for failed tests using DSPy"""
+        """Optimize prompts for failed tests using DSPy — but only when the
+        prompt is actually at fault.  Argument-related failures get routed to
+        an argument-fix path instead."""
         if self.verbosity.value >= VerbosityLevel.NORMAL.value:
             optimization_print(
                 f"Attempting optimization for {len(failed_tests)} failed tests..."
             )
 
         for test_case, report in failed_tests:
+            failure_class = self._classify_failure(report)
+
             if self.verbosity.value >= VerbosityLevel.VERBOSE.value:
                 optimization_print(
-                    f"  Optimizing {test_case.tool_name}.{test_case.test_name}..."
+                    f"  [{failure_class}] {test_case.tool_name}.{test_case.test_name}"
+                )
+
+            if failure_class == "argument_error":
+                # Don't waste a DSPy call — fix the arguments directly
+                self._fix_arguments(test_case, report)
+                continue
+
+            if failure_class == "protocol_error":
+                # MCP layer failure — nothing a prompt change can fix
+                warning_print(
+                    f"    Protocol error for {test_case.tool_name} — skipping optimization"
+                )
+                continue
+
+            # Prompt/semantic failure — use DSPy
+            if self.verbosity.value >= VerbosityLevel.VERBOSE.value:
+                optimization_print(
+                    f"  Optimizing prompt for {test_case.tool_name}.{test_case.test_name}..."
                 )
 
             # Create optimization context
@@ -1063,6 +1234,104 @@ class FlightChecker:
                 warning_print(
                     f"    No optimization applied for {test_case.tool_name}.{test_case.test_name}"
                 )
+
+    # ------------------------------------------------------------------
+    # Failure classification & argument-fix path
+    # ------------------------------------------------------------------
+
+    _ARGUMENT_ERROR_SIGNALS = [
+        "enoent",
+        "enotdir",
+        "eexist",
+        "eisdir",
+        "eacces",
+        "eperm",
+        "no such file",
+        "not a directory",
+        "is a directory",
+        "file not found",
+        "path not found",
+        "invalid path",
+        "type mismatch",
+        "invalid argument",
+        "missing required",
+        "status code 404",
+        "status code 400",
+    ]
+
+    def _classify_failure(self, report: TestReport) -> str:
+        """Classify a test failure into: argument_error | protocol_error | prompt_error"""
+        response_lower = (report.response or "").lower()
+        error_lower = (report.error_message or "").lower()
+
+        # Protocol-level failure
+        if "MCP protocol-level" in (report.error_message or ""):
+            return "protocol_error"
+
+        combined = response_lower + " " + error_lower
+        if any(signal in combined for signal in self._ARGUMENT_ERROR_SIGNALS):
+            return "argument_error"
+
+        return "prompt_error"
+
+    def _fix_arguments(self, test_case: TestCase, report: TestReport):
+        """Attempt to fix arguments based on the error signal."""
+        response_lower = (report.response or "").lower()
+        tool_name_lower = test_case.tool_name.lower()
+        changed = False
+
+        for arg_name, arg_value in list(test_case.generated_arguments.items()):
+            if not isinstance(arg_value, str):
+                continue
+            arg_name_lower = arg_name.lower()
+
+            # Path-type arguments
+            is_path_arg = any(
+                kw in arg_name_lower for kw in ("path", "file", "dir", "folder", "source", "destination")
+            )
+            if not is_path_arg:
+                continue
+
+            # Determine whether to use a directory or file path
+            needs_directory = any(
+                kw in tool_name_lower
+                for kw in ("directory", "folder", "tree", "list_dir", "list_directory")
+            ) or "enotdir" in response_lower
+
+            needs_existing_file = any(
+                kw in tool_name_lower for kw in ("read", "file", "get_file")
+            ) or "enoent" in response_lower
+
+            if needs_directory:
+                test_case.generated_arguments[arg_name] = "."
+                changed = True
+                debug_print(f"    Fixed {arg_name} → '.' (directory)")
+            elif needs_existing_file or "source" in arg_name_lower:
+                safe_file = self._create_safe_test_file()
+                test_case.generated_arguments[arg_name] = safe_file
+                changed = True
+                debug_print(f"    Fixed {arg_name} → '{safe_file}' (existing file)")
+            elif "destination" in arg_name_lower or "target" in arg_name_lower:
+                import time as _time
+                dest = f"test_dest_{int(_time.time())}.txt"
+                test_case.generated_arguments[arg_name] = dest
+                self.created_test_files.append(dest)
+                changed = True
+                debug_print(f"    Fixed {arg_name} → '{dest}' (destination)")
+
+        if changed:
+            optimization_record = {
+                "timestamp": datetime.now().isoformat(),
+                "strategy": "argument_fix",
+                "failure_context": report.response[:200] if report.response else "",
+                "fixed_arguments": test_case.generated_arguments,
+            }
+            test_case.optimization_history.append(optimization_record)
+            self._save_test_cases()
+        else:
+            warning_print(
+                f"    Could not auto-fix arguments for {test_case.tool_name}.{test_case.test_name}"
+            )
 
     def _record_success(self, test_case: TestCase):
         """Record a successful test case"""

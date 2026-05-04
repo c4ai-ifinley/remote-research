@@ -118,6 +118,53 @@ class ToolCallSignature(dspy.Signature):
     )
 
 
+# ---------------------------------------------------------------------------
+# LLM-as-Judge: semantic pass/fail arbiter
+# ---------------------------------------------------------------------------
+
+class ToolResultJudgeSignature(dspy.Signature):
+    """Judge whether a tool call achieved the user's intent."""
+
+    user_prompt = dspy.InputField(
+        desc="The original prompt / user intent for this tool call"
+    )
+    tool_name = dspy.InputField(desc="Name of the MCP tool that was called")
+    arguments = dspy.InputField(
+        desc="JSON arguments passed to the tool"
+    )
+    tool_response = dspy.InputField(
+        desc="The raw text response returned by the tool"
+    )
+    verdict = dspy.OutputField(
+        desc="Exactly 'PASS' or 'FAIL' — did the tool achieve the user's intent?"
+    )
+    rationale = dspy.OutputField(
+        desc="One-sentence explanation of why the verdict was reached"
+    )
+
+
+class ToolResultJudge(dspy.Module):
+    """DSPy module that acts as an LLM-as-judge for tool call outcomes."""
+
+    def __init__(self):
+        super().__init__()
+        self.judge = dspy.ChainOfThought(ToolResultJudgeSignature)
+
+    def forward(
+        self,
+        user_prompt: str,
+        tool_name: str,
+        arguments: str,
+        tool_response: str,
+    ):
+        return self.judge(
+            user_prompt=user_prompt,
+            tool_name=tool_name,
+            arguments=arguments,
+            tool_response=tool_response,
+        )
+
+
 class ToolCallGenerator(dspy.Module):
     """DSPy module for generating tool calls from user intent"""
 
@@ -259,6 +306,7 @@ class DSPyOptimizer:
             # Initialize DSPy modules
             self.optimizer = PromptOptimizer()
             self.call_generator = ToolCallGenerator()
+            self.result_judge = ToolResultJudge()
 
             debug_print("DSPy modules initialized successfully")
             success_print("DSPy setup complete!")
@@ -272,6 +320,7 @@ class DSPyOptimizer:
             warning_print("Falling back to rule-based optimization")
             self.optimizer = None
             self.call_generator = None
+            self.result_judge = None
 
     def optimize_prompt(self, context: OptimizationContext) -> str:
         """Optimize a prompt using DSPy approach"""
@@ -341,6 +390,40 @@ class DSPyOptimizer:
         except Exception as e:
             error_print(f"DSPy instruction generation failed: {e}")
             return self._fallback_instruction_generation(tool_schema, user_intent)
+
+    def judge_tool_result(
+        self,
+        user_prompt: str,
+        tool_name: str,
+        arguments: Dict[str, Any],
+        tool_response: str,
+    ) -> Dict[str, Any]:
+        """Use LLM-as-judge to determine if a tool call achieved user intent.
+
+        Returns:
+            {"pass": bool, "rationale": str}
+        """
+        if not self.result_judge:
+            debug_print("LLM judge not available — skipping semantic judgement")
+            return {"pass": None, "rationale": "Judge unavailable"}
+
+        try:
+            result = self.result_judge(
+                user_prompt=user_prompt,
+                tool_name=tool_name,
+                arguments=json.dumps(arguments, indent=2),
+                tool_response=tool_response[:2000],  # truncate for token budget
+            )
+
+            verdict_str = result.verdict.strip().upper()
+            passed = verdict_str == "PASS"
+            rationale = result.rationale.strip() if hasattr(result, "rationale") else ""
+
+            return {"pass": passed, "rationale": rationale}
+
+        except Exception as e:
+            error_print(f"LLM judge call failed: {e}")
+            return {"pass": None, "rationale": f"Judge error: {e}"}
 
     def _format_tool_schema(self, tool_schema: Dict[str, Any]) -> str:
         """Format tool schema for DSPy input"""
